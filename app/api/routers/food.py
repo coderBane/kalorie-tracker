@@ -67,7 +67,7 @@ def get_food_items(response: Response, filter: Annotated[FoodItemsFilter, Query(
             select_stmt = select_stmt.where(col(FoodItem.calories_per_serving) >= filter.min_calories)
         if filter.max_calories:
             count_stmt = count_stmt.where(col(FoodItem.calories_per_serving) <= filter.max_calories) 
-            select_stmt = count_stmt.where(col(FoodItem.calories_per_serving) <= filter.max_calories) 
+            select_stmt = select_stmt.where(col(FoodItem.calories_per_serving) <= filter.max_calories) 
 
         count = db_session.exec(count_stmt).one()
         if count == 0:
