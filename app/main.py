@@ -3,9 +3,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from scalar_fastapi import get_scalar_api_reference
 
+from app.database.initializer import init_db, seed_db
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    init_db()
+    seed_db()
     yield
 
 

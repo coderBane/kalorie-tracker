@@ -26,6 +26,8 @@ class DatabaseContext:
         create_db_if_not_exists(self._engine)
 
         alembic_cfg = config.Config("alembic.ini")
+        alembic_cfg.set_main_option("script_location", "migrations")
+        alembic_cfg.set_main_option("sqlalchemy.url", str(self._engine.url))
 
         # Check if there are pending migrations
         directory = script.ScriptDirectory.from_config(alembic_cfg)
@@ -34,8 +36,6 @@ class DatabaseContext:
             has_pending_migrations = set(context.get_current_heads()) == set(directory.get_heads())
         
         if not has_pending_migrations:
-            alembic_cfg.set_main_option("sqlalchemy.url", str(self._engine.url))
-
             # Apply all migrations up to 'head' (latest)
             command.upgrade(alembic_cfg, "head")
     
