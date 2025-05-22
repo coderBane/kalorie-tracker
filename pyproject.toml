@@ -1,0 +1,37 @@
+[project]
+name = "kalorietracker"
+version = "0.1.0"
+description = "A Nigerian-focused calorie tracking and meal planning app"
+authors = [
+    {name = "Aniekan Umanah"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard] (>=0.115.12,<0.116.0)",
+    "pydantic-settings (>=2.9.1,<3.0.0)",
+    "scalar-fastapi (>=1.0.3,<2.0.0)",
+    "sqlmodel (>=0.0.24,<0.0.25)",
+    "psycopg[binary] (>=3.2.7,<4.0.0)",
+    "sqlalchemy-utils (>=0.41.2,<0.42.0)",
+    "alembic (>=1.15.2,<2.0.0)",
+    "dependency-injector (>=4.46.0,<5.0.0)",
+]
+
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+devtools = "^0.12.2"
+coverage = "^7.8.0"
+mypy = "^1.15.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+strict = true
+exclude = ["venv", ".venv"]
+plugins = ['pydantic.mypy']
