@@ -21,6 +21,7 @@ if not config.get_main_option("sqlalchemy.url"):
 # add your model's MetaData object here
 # for 'autogenerate' support
 from sqlmodel import SQLModel
+from app.models.food import FoodCategory, FoodItem
 target_metadata = SQLModel.metadata
 
 # other values from the config, defined by the needs of env.py,
