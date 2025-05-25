@@ -1,5 +1,76 @@
+from collections.abc import Iterable, Mapping
+from enum import Enum
 from math import ceil
-from typing import Iterable, TypeVar
+from typing import TypeVar
+
+
+class ErrorType(Enum):
+    """Application error types with corresponding HTTP status codes."""
+
+    INVALID = 400
+    NOTFOUND = 404
+    CONFLICT = 409
+    PROBLEM = 500
+
+
+class Error:
+    """Represents an application error.
+    """
+    
+    def __init__(
+        self, 
+        error_type: ErrorType, 
+        title: str, 
+        details: str, 
+        failures: Mapping[str, list[str]] | None = None
+    ):
+        """
+        Parameters:
+            error_type (ErrorType): The type of the error.
+            title (str): The title of the error.
+            details (str): The details of the error.
+            failures (Mapping[str, list[str]]): A mapping of field names to lists of error messages.
+        """
+        self.__error_type = error_type
+        self.__title = title
+        self.__details = details
+        self.__failures = failures
+    
+    @property
+    def error_type(self) -> ErrorType:
+        return self.__error_type
+    
+    @property
+    def title(self) -> str:
+        return self.__title
+    
+    @property
+    def details(self) -> str:
+        return self.__details
+
+    @property
+    def failures(self) -> Mapping[str, list[str]] | None:
+        return self.__failures
+
+    @staticmethod
+    def invalid(title: str, details: str) -> "Error":
+        return Error(ErrorType.INVALID, title, details)
+    
+    @staticmethod
+    def validation(title: str, failures: Mapping[str, list[str]]) -> "Error":
+        return Error(ErrorType.INVALID, title, "One or more validation erors have occurred", failures)
+
+    @staticmethod
+    def not_found(title: str, details: str) -> "Error":
+        return Error(ErrorType.NOTFOUND, title, details)
+
+    @staticmethod
+    def conflict(title: str, details: str) -> "Error":
+        return Error(ErrorType.CONFLICT, title, details)
+
+    @staticmethod
+    def problem(details: str | None = None) -> "Error":
+        return Error(ErrorType.PROBLEM, "Error.InternalServer", (details or "An unknown error has occured"))
 
 
 T = TypeVar('T')
@@ -29,76 +100,3 @@ class PagedList(list[T]):
         self._size = size
         self._items_count = count
         self._page_count = ceil(count / size)
-
-
-# class Result:
-#     """Represent the result of an operation.
-#     """
-
-#     def __init__(self, error: Error | None):
-#         """
-#         Parameters:
-#             error (Error | None): The error that occurred.
-#         """
-#         self.__error = error
-
-#     @property
-#     def success(self) -> bool:
-#         return self.__error is None
-
-#     @classmethod
-#     def from_success(cls) -> Self:
-#         """
-#         Creates a successful result.
-#         """
-#         return cls(error=None)
-
-#     @classmethod
-#     def from_failure(cls, error: Error) -> Self:
-#         """
-#         Creates a failed result.
-
-#         Args:
-#             error (Error): The error that occurred.
-#         """
-#         return cls(error=error)
-
-
-# T = TypeVar('T')
-
-# class ResultT(Result, Generic[T]):
-#     """A generic wrapper for the Result class that holds data of type T on success.
-#     """
-
-#     def __init__(self, data: T | None, error: Error | None):
-#         """Initializes the Result that has data.
-
-#         Parameters:
-#             data (T): The data to be returned on success.
-#             error (Error): The error that occurred.
-#         """
-#         self.__data = data
-#         super().__init__(error)
-
-#     @property
-#     def data(self) -> T:
-#         """
-#         Returns the data if the operation was successful.
-
-#         Raises:
-#             ValueError: If the operation was not successful (Result contains an error).
-#         """
-#         if not self.success:
-#             raise ValueError("Result does not contain data because it was not successful")
-#         assert self.__data
-#         return self.__data
-
-#     @classmethod
-#     def from_success(cls, data: T) -> Self:
-#         """
-#         Creates a successful result with data.
-
-#         Parameters:
-#             data (T): The data to be returned on success.
-#         """
-#         return cls(data=data, error=None)

@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from scalar_fastapi import get_scalar_api_reference
 
+from app.core.container import DIContainer
 from app.database.initializer import init_db, seed_db
 from app.api.routers.food import food_router
 
@@ -13,8 +14,11 @@ async def lifespan(app: FastAPI):
     seed_db()
     yield
 
+container = DIContainer()
+
 
 app = FastAPI(lifespan=lifespan, title="Kalorie Tracker API")
+
 app.include_router(food_router)
 
 

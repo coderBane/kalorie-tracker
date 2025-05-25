@@ -1,7 +1,7 @@
 from enum import StrEnum
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from app.models.food import NutritionContent
 from app.schemas.common.pagination import PaginationFilter
@@ -27,10 +27,6 @@ class FoodItemEntry(BaseModel):
     nutrition_content: NutritionContent
     image_uri: str | None = None
     food_category_ids: list[UUID] = []
-
-    @field_validator("nutrition_content")
-    def transform_value(value: BaseModel):
-        return value.model_dump()
 
 
 class FoodItemSortOrder(StrEnum):
@@ -66,7 +62,7 @@ class FoodItemsResponse(BaseModel):
 class FoodItemResponse(FoodItemsResponse):
     nutrition_content: NutritionContent
     categories: list[FoodCategorySummary] = Field(validation_alias="food_categories")
-    recipies: list["RecipeSummary"]
+    recipes: list["RecipeSummary"]
 
     
 class RecipeSummary(BaseModel):

@@ -1,5 +1,5 @@
-from app.core.settings import app_settings
-from app.database import DatabaseContext
+from app.core.container import DIContainer
 
 
-app_dbcontext = DatabaseContext(str(app_settings.DB_DSN))
+# database
+app_dbcontext = DIContainer.app_db_context
