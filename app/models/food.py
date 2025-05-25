@@ -58,7 +58,7 @@ class FoodItem(AuditableEntity, table=True):
     image_uri: str | None = None
 
     food_categories: list[FoodCategory] = Relationship(back_populates="food_items", link_model=FoodItemCategory)
-    recipies: list["Recipe"] = Relationship(back_populates="food_item", cascade_delete=True)
+    recipes: list["Recipe"] = Relationship(back_populates="food_item", cascade_delete=True)
 
 
 class Recipe(AuditableEntity, table=True):
@@ -75,4 +75,4 @@ class Recipe(AuditableEntity, table=True):
     serving_size: int = Field(gt=0)
     nutrition_content: NutritionContent | None = Field(sa_column=Column(JSONB))
 
-    food_item: FoodItem = Relationship(back_populates="recipies")
+    food_item: FoodItem = Relationship(back_populates="recipes")

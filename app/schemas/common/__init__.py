@@ -1,5 +1,4 @@
-from .error import Error, ErrorType
-from .result import PagedList
+from .result import ErrorType, Error, PagedList
 from .pagination import PaginationFilter, PaginationResponse
 
 __all__ = [
