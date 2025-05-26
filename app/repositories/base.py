@@ -5,6 +5,7 @@ from typing import (
     Generic, 
     Sequence,  
     TypeVar,
+    overload,
 )
 
 from pydantic import BaseModel
@@ -13,7 +14,7 @@ from sqlalchemy.orm import QueryableAttribute, selectinload
 from sqlmodel import select, func
 from sqlmodel.sql.expression import SelectOfScalar
 
-from app.database import DatabaseContext
+from app.database import DatabaseContext, QueryBuilder
 from app.database.interceptors import soft_delete_entity
 from app.models import Entity, SoftDeleteEntity
 
@@ -96,42 +97,64 @@ class BaseRepository(ABC, Generic[TEntity]):
     # Queries
     # --------------------
 
-    def any(self, *filters: ColumnElement[bool]) -> bool:
-        """Check if a row exists in the database matching all given criteria.
-        """
-        with self._db_context.get_session() as session:
-            statement = (
-                self._exclude_deleted_entities(
-                    select(1).select_from(self._entity)
-                ).where(*filters)
-            )
-            result = session.exec(statement).first()
-            return result is not None
+    @overload
+    def any(self, *filters: ColumnElement[bool]) -> bool: ...
+    @overload
+    def any(self, *, query: QueryBuilder[TEntity]) -> bool: ...
     
-    def count(self, *filters: ColumnElement[bool]) -> int:
+    def any(self, *filters: ColumnElement[bool], query: QueryBuilder[TEntity] | None = None) -> bool:
+        with self._db_context.get_session() as session:
+            stmt = select(1).select_from(self._entity)
+            if query is not None:
+                stmt = query(stmt, criteriaOnly=True)
+            else:
+                stmt = self._exclude_deleted_entities(stmt).where(*filters)
+            result = session.exec(stmt).first()
+            return result is not None
+
+    @overload
+    def count(self, *filters: ColumnElement[bool]) -> int: ...
+    @overload
+    def count(self, *, query: QueryBuilder[TEntity]) -> int: ...
+    
+    def count(self, *filters: ColumnElement[bool], query: QueryBuilder[TEntity] | None = None) -> int:
         """Count the number of rows in the database matching all given criteria.
         """
         with self._db_context.get_session() as session:
-            statement = (
-                self._exclude_deleted_entities(
-                    select(func.count()).select_from(self._entity)
-                ).where(*filters)
-            )
-            return session.exec(statement).one()
-
+            stmt = select(func.count()).select_from(self._entity)
+            if query is not None:
+                stmt = query(stmt, criteriaOnly=True)
+            else:
+                stmt = self._exclude_deleted_entities(stmt).where(*filters)
+    
+            return session.exec(stmt).one()
+    
+    @overload
+    def find(self, *, query: QueryBuilder[TEntity]) -> TEntity | None: ...
+    @overload
     def find(
         self, 
         *filters: ColumnElement[bool], 
         includes: Sequence[QueryableAttribute[Any]] | None = None
+    ) -> TEntity | None: ...
+
+    def find(
+        self,
+        *filters: ColumnElement[bool], 
+        includes: Sequence[QueryableAttribute[Any]] | None = None,
+        query: QueryBuilder[TEntity] | None = None,
     ) -> TEntity | None:
         """Find an entity matching the given criteria.
         """
         with self._db_context.get_session() as session:
             statement = select(self._entity)
-            for eager in includes or []:
-                statement = statement.options(selectinload(eager))
-            statement = self._exclude_deleted_entities(statement)
-            statement = statement.where(*filters)
+            if query is not None:
+                statement = query(statement)
+            else:
+                for eager in includes or []:
+                    statement = statement.options(selectinload(eager))
+                statement = self._exclude_deleted_entities(statement)
+                statement = statement.where(*filters)
 
             return session.exec(statement).first()
 
@@ -140,12 +163,23 @@ class BaseRepository(ABC, Generic[TEntity]):
         """
         with self._db_context.get_session() as session:
             return session.get(self._entity, id)
-    
-    def get_list(self, *filters: ColumnElement[bool], **options: Any) -> Sequence[TEntity]:
+
+    @overload 
+    def get_list(self, *, query: QueryBuilder[TEntity]) -> Sequence[TEntity]: ...
+    @overload
+    def get_list(self, *filters: ColumnElement[bool], **options: Any) -> Sequence[TEntity]: ...
+
+    def get_list(
+            self, 
+            *filters: ColumnElement[bool], 
+            query: QueryBuilder[TEntity] | None = None, 
+            **options: Any
+    ) -> Sequence[TEntity]:
         """
         Retrieve a list of entities matching the specified filters and options.
 
         Parameters:
+            query (QueryBuilder[TEntity]): Optional query builder to customize the query.        
             *filters (ColumnElement[bool]): Optional SQLAlchemy filter expressions to apply to the query.
             **options (Any): Optional keyword arguments to modify the query behavior:
                 - includes (Sequence[QueryableAttribute[Any]]): Eager load related entities.
@@ -158,16 +192,19 @@ class BaseRepository(ABC, Generic[TEntity]):
         """
         with self._db_context.get_session() as session:
             statement = select(self._entity)
-            if options.get("includes", []):
-                statement = statement.options(selectinload(*options["includes"]))
-            statement = self._exclude_deleted_entities(statement)
-            statement = statement.where(*filters)
-            if options.get("ordering", None) is not None:
-                statement = statement.order_by(options["ordering"])
-            if options.get("skip", 0):
-                statement = statement.offset(options["skip"])
-            if options.get("take", 0):
-                statement = statement.limit(options["take"])
+            if query is not None:
+                statement = query(statement)
+            else:
+                if options.get("includes", []):
+                    statement = statement.options(selectinload(*options["includes"]))
+                statement = self._exclude_deleted_entities(statement)
+                statement = statement.where(*filters)
+                if options.get("ordering", None) is not None:
+                    statement = statement.order_by(options["ordering"])
+                if options.get("skip", 0):
+                    statement = statement.offset(options["skip"])
+                if options.get("take", 0):
+                    statement = statement.limit(options["take"])
             
             return session.exec(statement).all()
     

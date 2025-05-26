@@ -76,3 +76,8 @@ class Recipe(AuditableEntity, table=True):
     nutrition_content: NutritionContent | None = Field(sa_column=Column(JSONB))
 
     food_item: FoodItem = Relationship(back_populates="recipes")
+
+
+FoodCategory.model_rebuild()
+FoodItem.model_rebuild()
+Recipe.model_rebuild()

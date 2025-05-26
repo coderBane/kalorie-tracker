@@ -1,9 +1,14 @@
-from typing import Sequence, assert_never
+from typing import Sequence
 from uuid import UUID
 
-from sqlmodel import col, or_, func
+from sqlmodel import col
 
-from app.models.food import FoodCategory, FoodItem, Recipe
+from app.models.food import FoodCategory, FoodItem
+from app.queries.food_queries import (
+    FoodCategoriesQuery, 
+    FoodItemQuery, 
+    FoodItemsFilterQuery
+)
 from app.repositories import FoodCategoryRepository, FoodItemRepository
 from app.schemas.common import Error, PagedList
 from app.schemas.food import (
@@ -11,7 +16,6 @@ from app.schemas.food import (
     FoodItemEntry, 
     FoodItemResponse, 
     FoodItemsResponse, 
-    FoodItemSortOrder, 
     FoodItemsFilter
 )
 from app.utils.collection import compare_collections
@@ -43,8 +47,9 @@ class FoodService:
     def get_food_categories(self, name: str | None = None) -> Sequence[FoodCategoryResponse]:
         """Retrieve a list of food categories.
         """
-        filters = [col(FoodCategory.name).istartswith(name)] if name else []
-        categories = self.__food_category_repository.get_list(*filters, ordering=col(FoodCategory.name).asc())
+        query = FoodCategoriesQuery(name)
+        categories = self.__food_category_repository.get_list(query=query)
+
         return [
             FoodCategoryResponse.model_validate(category, from_attributes=True) 
             for category in categories
@@ -53,41 +58,14 @@ class FoodService:
     def get_food_items(self, filter: FoodItemsFilter) -> PagedList[FoodItemsResponse]:
         """Retrieve a list of food items.
         """
-        query_filters = []
-        if filter.search:
-            query_filters.append(
-                or_(
-                    col(FoodItem.name).icontains(filter.search),
-                    col(FoodItem.food_categories).any(col(FoodCategory.name).icontains(filter.search)),
-                    col(FoodItem.recipes).any(col(Recipe.name).icontains(filter.search))
-                )
-            )
-        if filter.name:
-            query_filters.append(col(FoodItem.name).istartswith(filter.name))
-        if filter.min_calories:
-            query_filters.append(col(FoodItem.calories_per_serving) >= filter.min_calories)
-        if filter.max_calories:
-            query_filters.append(col(FoodItem.calories_per_serving) <= filter.max_calories) 
-
+        query = FoodItemsFilterQuery(filter)
         items_response: Sequence[FoodItemsResponse] = [] 
 
-        count = self.__food_item_repository.count(*query_filters)
+        count = self.__food_item_repository.count(query=query)
         if count == 0:
-            return PagedList(items_response, 0, filter.index, filter.size)
-        
-        match filter.sort_order:
-            case FoodItemSortOrder.DEFAULT:
-                order = func.coalesce(FoodItem.last_modified_utc, FoodItem.created_utc).desc()
-            case FoodItemSortOrder.NAME_ASC:
-                order = col(FoodItem.name).asc()
-            case FoodItemSortOrder.NAME_DESC:
-                order = col(FoodItem.name).desc()
-            case _ as unreachable: assert_never(unreachable)
+            return PagedList(items_response, count, filter.index, filter.size)
 
-        skip = (filter.index - 1) * filter.size
-        take = filter.size
-
-        items = self.__food_item_repository.get_list(*query_filters, ordering=order, skip=skip, take=take)
+        items = self.__food_item_repository.get_list(query=query)
         items_response = [
             FoodItemsResponse.model_validate(item, from_attributes=True) 
             for item in items
@@ -98,14 +76,13 @@ class FoodService:
     def get_food_item(self, food_id: UUID) -> Error | FoodItemResponse:
         """Retrieve a food item by its ID.
         """
-        food_item = self.__food_item_repository.find(
-            col(FoodItem.id) == food_id,
-            includes=(FoodItem.food_categories, FoodItem.recipes)  # type: ignore
-        )
+        query = FoodItemQuery(food_id, eager=True)
+        food_item = self.__food_item_repository.find(query=query)
         if not food_item:
             return Error.not_found(
                 "FoodError.NotFound", 
-                f"Food Item (ID: {food_id}) does not exist.")
+                f"Food Item (ID: {food_id}) does not exist."
+            )
         
         return FoodItemResponse.model_validate(food_item, from_attributes=True)
 
@@ -155,7 +132,7 @@ class FoodService:
             col(FoodCategory.id).in_(food_entry.food_category_ids)
         )
 
-        comparison_result = compare_collections(categories, food_item.food_categories)
+        comparison_result = compare_collections(current=categories, previous=food_item.food_categories)
         if comparison_result.has_changes():
             for c in comparison_result.added:
                 food_item.food_categories.append(c)

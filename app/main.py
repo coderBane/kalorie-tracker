@@ -14,13 +14,12 @@ async def lifespan(app: FastAPI):
     seed_db()
     yield
 
-container = DIContainer()
 
+container = DIContainer()
 
 app = FastAPI(lifespan=lifespan, title="Kalorie Tracker API")
 
 app.include_router(food_router)
-
 
 @app.get("/scalar", include_in_schema=False)
 def scalar_html():
