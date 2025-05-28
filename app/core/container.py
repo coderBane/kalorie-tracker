@@ -2,6 +2,7 @@ from dependency_injector import containers, providers
 
 from app.core.settings import app_settings
 from app.database import DatabaseContext
+from app.managers import *
 from app.repositories import *
 from app.services import *
 
@@ -13,6 +14,7 @@ class DIContainer(containers.DeclarativeContainer):
 
     wiring_config = containers.WiringConfiguration(
         modules=[
+            "app.api.routers.auth",
             "app.api.routers.food"
         ]
     )
@@ -35,4 +37,16 @@ class DIContainer(containers.DeclarativeContainer):
         FoodService,
         food_category_repository=food_category_repository,
         food_item_repository=food_item_repository
+    )
+
+    ### auth ###
+
+    user_manager = providers.Factory(
+        UserManager,
+        db_context=app_db_context
+    )
+
+    auth_service = providers.Factory(
+        AuthService,
+        user_manager=user_manager
     )
