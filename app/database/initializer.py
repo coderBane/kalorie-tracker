@@ -1,26 +1,35 @@
-from sqlmodel import select
+import logging
+
+from sqlmodel import Session, col, select
 
 from app.database import DatabaseContext
 from app.core.settings import app_settings
+from app.managers import UserManager
+from app.models.auth import User
 from app.models.food import FoodCategory, FoodItem, NutritionContent
 
 
+logger = logging.getLogger(__name__)
+
 __app_db_context = DatabaseContext(str(app_settings.DB_DSN))
+__user_manager = UserManager(__app_db_context)
 
 
 def init_db() -> None:
     """Initialize the database."""
     try:
         __app_db_context.apply_migrations()
-    except:
-        raise
-    pass
+    except Exception as e:
+        logger.error("Error initializing the database.", exc_info=True)
+        raise e
 
 
 def seed_db() -> None:
     """Seed the database with initial data."""
     try:
         with __app_db_context.get_session() as db_session:
+            __seed_admin_user(db_session)
+
             if db_session.exec(select(1).select_from(FoodCategory)).first() is None:
                 db_session.add_all(__food_categories)
 
@@ -28,8 +37,26 @@ def seed_db() -> None:
                 db_session.add_all(__food_items)
             
             db_session.commit()
-    except:
-        raise
+    except Exception as e:
+        logger.error("Error seeding the database.", exc_info=True)
+        raise e
+
+
+def __seed_admin_user(db_session: Session) -> None:
+    admin_email = "admin@kalorie-tracker.com"
+    user = db_session.exec(
+        select(User).where(col(User.email_address).ilike(admin_email))
+    ).first()
+    if user:
+        return
+    
+    user = User(
+        username="admin",
+        email_address=admin_email,
+        is_active=True,
+    )
+
+    user = __user_manager.create(user, "admin123!")
 
 
 __food_categories = (
