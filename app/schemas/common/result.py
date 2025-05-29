@@ -8,6 +8,7 @@ class ErrorType(Enum):
     """Application error types with corresponding HTTP status codes."""
 
     INVALID = 400
+    UNAUTHORIZED = 401
     NOTFOUND = 404
     CONFLICT = 409
     PROBLEM = 500
@@ -67,10 +68,22 @@ class Error:
     @staticmethod
     def conflict(title: str, details: str) -> "Error":
         return Error(ErrorType.CONFLICT, title, details)
+    
+    @classmethod
+    def unauthorized(cls, details: str | None = None) -> "Error":
+        return Error(
+            ErrorType.UNAUTHORIZED, 
+            "AuthError.InvalidCredentials", 
+            (details or "Could not validate credentials")
+        )
 
     @staticmethod
     def problem(details: str | None = None) -> "Error":
-        return Error(ErrorType.PROBLEM, "Error.InternalServer", (details or "An unknown error has occured"))
+        return Error(
+            ErrorType.PROBLEM, 
+            "Error.InternalServer", 
+            (details or "An unknown error has occured")
+        )
 
 
 T = TypeVar('T')

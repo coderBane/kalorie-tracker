@@ -1,5 +1,8 @@
-from app.services.food_service import FoodService
+from .auth_service import AuthService
+from .food_service import FoodService
+
 
 __all__ = [
+    'AuthService',
     'FoodService',
 ]
