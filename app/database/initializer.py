@@ -1,6 +1,6 @@
 import logging
 
-from sqlmodel import Session, col, select
+from sqlmodel import Session, select
 
 from app.database import DatabaseContext
 from app.core.settings import app_settings
@@ -44,11 +44,10 @@ def seed_db() -> None:
 
 def __seed_admin_user(db_session: Session) -> None:
     admin_email = "admin@kalorie-tracker.com"
-    user = db_session.exec(
-        select(User).where(col(User.email_address).ilike(admin_email))
-    ).first()
+    user = __user_manager.get_by_email(admin_email)
     if user:
-        return
+        db_session.delete(user)
+        db_session.commit()
     
     user = User(
         username="admin",
