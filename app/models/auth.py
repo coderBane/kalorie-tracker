@@ -1,9 +1,33 @@
 from uuid import UUID
 
 from pydantic import EmailStr
-from sqlmodel import Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship
 
 from app.models import Entity
+
+
+class UserRole(SQLModel, table=True):
+    """Model representing a user/role association.
+    """
+
+    __tablename__ = "auth_user_role" # type: ignore
+
+    user_id: UUID | None = Field(default=None, foreign_key="auth_user.id", primary_key=True)
+    role_id: UUID | None = Field(default=None, foreign_key="auth_role.id", primary_key=True)
+
+    user: 'User' = Relationship(back_populates="user_roles")
+    role: 'Role' = Relationship(back_populates="user_roles")
+
+
+class Role(Entity, table=True):
+    """Model representing a role in the system.
+    """
+
+    __tablename__ = "auth_role" # type: ignore
+
+    name: str = Field(max_length=256, index=True, unique=True)
+
+    user_roles: list[UserRole] = Relationship(back_populates="role")
 
 
 class User(Entity, table=True):
@@ -23,6 +47,7 @@ class User(Entity, table=True):
     password_history: list["UserPasswordHistory"] = Relationship(
         back_populates="user", cascade_delete=True
     )
+    user_roles: list[UserRole] = Relationship(back_populates="user")
 
 
 class UserPasswordHistory(Entity, table=True):
