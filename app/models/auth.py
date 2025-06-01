@@ -26,6 +26,7 @@ class Role(Entity, table=True):
     __tablename__ = "auth_role" # type: ignore
 
     name: str = Field(max_length=256, index=True, unique=True)
+    description: str | None = None
 
     user_roles: list[UserRole] = Relationship(back_populates="role")
 
