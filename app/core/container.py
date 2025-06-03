@@ -20,18 +20,22 @@ class DIContainer(containers.DeclarativeContainer):
         ]
     )
 
+    ## database ##
+
     app_db_context = providers.Singleton(
         DatabaseContext, 
         connection_string=str(app_settings.DB_DSN))
     
+    ## food ##
+    
     food_category_repository = providers.Factory(
         FoodCategoryRepository,
-        db_context=app_db_context
+        db_session_factory=app_db_context.provided.get_session
     )
 
     food_item_repository = providers.Factory(
         FoodItemRepository,
-        db_context=app_db_context
+        db_session_factory=app_db_context.provided.get_session
     )
 
     food_service = providers.Factory(
@@ -44,7 +48,7 @@ class DIContainer(containers.DeclarativeContainer):
 
     user_manager = providers.Factory(
         UserManager,
-        db_context=app_db_context
+        db_context=app_db_context,
     )
 
     auth_service = providers.Factory(
