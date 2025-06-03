@@ -46,12 +46,28 @@ class DIContainer(containers.DeclarativeContainer):
 
     ### auth ###
 
+    role_repository = providers.Factory(
+        RoleRepository,
+        db_session_factory=app_db_context.provided.get_session
+    )
+
+    role_manager = providers.Factory(
+        RoleManager,
+        role_repository=role_repository
+    )
+
+    user_repository = providers.Factory(
+        UserRepository,
+        db_session_factory=app_db_context.provided.get_session
+    )
+
     user_manager = providers.Factory(
         UserManager,
-        db_context=app_db_context,
+        user_repository=user_repository
     )
 
     auth_service = providers.Factory(
         AuthService,
+        role_manager=role_manager,
         user_manager=user_manager
     )
