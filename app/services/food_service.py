@@ -139,7 +139,9 @@ class FoodService:
             for c in comparison_result.removed:
                 food_item.food_categories.remove(c)
         
-        self.__food_item_repository.update(food_item, update_item)
+        food_item.sqlmodel_update(update_item)
+        
+        self.__food_item_repository.update(food_item)
 
         return food_item.id
 

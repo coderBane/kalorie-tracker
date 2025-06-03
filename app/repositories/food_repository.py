@@ -1,13 +1,18 @@
-from sqlmodel import col
+from collections.abc import Callable
+from contextlib import AbstractContextManager
 
-from app.database import DatabaseContext
+from sqlmodel import Session, col
+
 from app.models.food import FoodCategory, FoodItem
 from app.repositories.base import BaseRepository
 
 
 class FoodCategoryRepository(BaseRepository[FoodCategory]):
-    def __init__(self, db_context: DatabaseContext):
-        super().__init__(FoodCategory, db_context)
+    def __init__(
+        self, 
+        db_session_factory: Callable[..., AbstractContextManager[Session]]
+    ):
+        super().__init__(FoodCategory, db_session_factory)
 
     def exists(self, category: FoodCategory) -> bool:
         """Check if a food category exists.
@@ -19,8 +24,11 @@ class FoodCategoryRepository(BaseRepository[FoodCategory]):
 
 
 class FoodItemRepository(BaseRepository[FoodItem]):
-    def __init__(self, db_context: DatabaseContext):
-        super().__init__(FoodItem, db_context)
+    def __init__(
+        self, 
+        db_session_factory: Callable[..., AbstractContextManager[Session]]
+    ):
+        super().__init__(FoodItem, db_session_factory)
 
     def exists(self, item: FoodItem) -> bool:
         """Check if a food item exists.
