@@ -27,7 +27,11 @@ class TokenProvider:
         expire = datetime.now(timezone.utc) + \
             timedelta(minutes=app_settings.JWT.ACCESS_TOKEN_EXPIRE_MINUTES)
         
-        payload['exp'] = expire
+        payload.update({
+            "exp": expire,
+            "iat": datetime.now(timezone.utc),
+        })
+
         if app_settings.JWT.VALID_ISSUER:
             payload['iss'] = app_settings.JWT.VALID_ISSUER
         if app_settings.JWT.VALID_AUDIENCES:

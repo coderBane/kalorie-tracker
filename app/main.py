@@ -3,10 +3,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from scalar_fastapi import get_scalar_api_reference
 
-from app.core.container import DIContainer
-from app.database.initializer import init_db, seed_db
 from app.api.routers.auth import auth_router
 from app.api.routers.food import food_router
+from app.core.container import DIContainer
+from app.database.initializer import init_db, seed_db
+from app.middlewares import *
 
 
 @asynccontextmanager
@@ -18,7 +19,11 @@ async def lifespan(app: FastAPI):
 
 container = DIContainer()
 
-app = FastAPI(lifespan=lifespan, title="Kalorie Tracker API")
+app = FastAPI(
+    lifespan=lifespan, 
+    title="Kalorie Tracker API",
+    middleware=[BearerTokenAuthenticationMiddleware]
+)
 
 app.include_router(auth_router)
 app.include_router(food_router)

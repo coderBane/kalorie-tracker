@@ -68,6 +68,5 @@ class DIContainer(containers.DeclarativeContainer):
 
     auth_service = providers.Factory(
         AuthService,
-        role_manager=role_manager,
         user_manager=user_manager
     )

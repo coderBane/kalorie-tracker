@@ -1,12 +1,15 @@
 from typing import Annotated
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 
-from app.api.dependencies import CurrentUser
+from app.api.dependencies import Authorize, CurrentUser
 from app.core.container import DIContainer
-from app.schemas.auth import TokenResponse, UserSessionInfo
+from app.schemas.auth import (
+    TokenResponse,
+    UserSessionInfo
+)
 from app.schemas.common import Error
 from app.services import AuthService
 
@@ -37,17 +40,13 @@ def get_access_token(
     return TokenResponse(access_token=token_result)
 
 
-@auth_router.get("/users/me", operation_id="GetCurrentUser", response_model=UserSessionInfo)
-def get_current_user(request: Request, current_user: CurrentUser):
+@auth_router.get(
+    "/users/me", 
+    operation_id="CurrentUser", 
+    response_model=(UserSessionInfo | None),
+    dependencies=[Depends(Authorize())]
+)
+def get_current_user(current_user: CurrentUser):
     """Get the current user's information.
     """
-    if isinstance(current_user, Error):
-        raise HTTPException(
-            status_code=current_user.error_type.value,
-            detail=current_user.details
-        )
-    
-    if request.client:
-        current_user.ip_address = request.client.host
-
     return current_user
