@@ -14,10 +14,11 @@ class DIContainer(containers.DeclarativeContainer):
 
     wiring_config = containers.WiringConfiguration(
         modules=[
-            "app.api.dependencies",
-            "app.api.routers.auth",
+            "app.api.dependencies", 
+            "app.api.routers.auth", 
             "app.api.routers.food", 
-            "app.api.routers.users"
+            "app.api.routers.users", 
+            "app.api.routers.roles",
         ]
     )
 

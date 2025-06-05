@@ -1,4 +1,5 @@
 from typing import Sequence
+from uuid import UUID
 
 from app.repositories.role_repository import RoleRepository
 from app.models.auth import Role
@@ -24,8 +25,23 @@ class RoleManager:
 
         return self.__role_repository.add(role)
     
+    def update(self, role: Role):
+        """Update a role.
+        """
+        self.__role_repository.update(role)
+
+    def delete(self, role: Role):
+        """Delete a role.
+        """
+        self.__role_repository.delete(role)
+    
     def role_exists(self, role_name: str) -> bool:
         """Check if a role exists.
         """
         return self.__role_repository.exists(role_name)
+    
+    def get_by_id(self, role_id: UUID) -> Role | None:
+        """Find the role associated with the specified ID.
+        """
+        return self.__role_repository.get_by_id(role_id)
     

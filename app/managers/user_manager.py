@@ -117,6 +117,19 @@ class UserManager:
         """Check if the user is a member of the named role.
         """
         return self.__user_repository.is_in_role(user, role_name)
+    
+    def change_password(self, user: User, current_password: str, new_password: str) -> Error | None:
+        """Change the user's password.
+        """
+        assert user.password_hash
+        if not self.__password_hasher.verify_password(current_password, user.password_hash):
+            return Error.invalid("AuthError.InvalidPassword", "Invalid password")
+        if current_password == new_password:
+            return Error.invalid("AuthError.SamePassword", "New password cannot be the same as the old password")
+        
+        user.password_hash = self.__password_hasher.hash_password(new_password)
+        self.__user_repository.update(user)
+
 
     def check_password(self, user: User, password: str) -> bool:
         """Checks if the provided password matches the user's hashed password.
