@@ -51,10 +51,13 @@ class BearerTokenAuthBackend(AuthenticationBackend):
         if not user.is_active:
             raise AuthenticationError("Inactive user.")
         
-        conn.state.user = user
+        user_roles = user_manager.get_roles(user)
         
+        conn.state.user = user
+        conn.state.user_roles = user_roles
+
         scopes = ["authenticated"]
-        scopes.extend({f'role:{r}' for r in user_manager.get_roles(user)})
+        scopes.extend(user_roles)
         
         return AuthCredentials(scopes), SimpleUser(user.username)
 

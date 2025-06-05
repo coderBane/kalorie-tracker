@@ -14,5 +14,6 @@ class Roles(StrEnum):
 
 class Users:
     admin_user = "admin@kalorie-tracker.com"
+    basic_user = "basic@kalorie-tracker.com"
 
-    password = "password_123!"
+    password = "passworD123!"

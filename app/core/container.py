@@ -16,7 +16,8 @@ class DIContainer(containers.DeclarativeContainer):
         modules=[
             "app.api.dependencies",
             "app.api.routers.auth",
-            "app.api.routers.food"
+            "app.api.routers.food", 
+            "app.api.routers.users"
         ]
     )
 

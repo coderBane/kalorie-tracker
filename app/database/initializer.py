@@ -29,6 +29,7 @@ def seed_db() -> None:
     try:
         __seed_roles()
         __seed_admin_user()
+        __seed_basic_user()
         with __app_db_context.get_session() as db_session:
             if db_session.exec(select(1).select_from(FoodCategory)).first() is None:
                 db_session.add_all(__food_categories)
@@ -58,9 +59,22 @@ def __seed_admin_user() -> None:
             email_address=constants.Users.admin_user,
             is_active=True,
         )
-        __user_manager.create(user, "admin123!")
+        __user_manager.create(user, constants.Users.password)
 
     __user_manager.add_to_role(user, constants.Roles.ADMINISTRATOR)
+
+
+def __seed_basic_user() -> None:
+    user = __user_manager.get_by_email(constants.Users.basic_user)
+    if not user:
+        user = User(
+            username="basic",
+            email_address=constants.Users.basic_user,
+            is_active=True,
+        )
+        __user_manager.create(user, constants.Users.password)
+
+    __user_manager.add_to_role(user, constants.Roles.VIEWER)
 
 
 __food_categories = (

@@ -17,7 +17,7 @@ class Authorize:
     """
 
     def __init__(self, roles: Sequence[str] | None = None):
-        self.__roles = roles
+        self.__roles = set(roles) if roles else None
 
     def __call__(self, request: Request, _: str = Security(oauth2_bearer)):
         # Authentication check
@@ -29,10 +29,9 @@ class Authorize:
             )
         
         # Authorize check
-        user_scopes = getattr(request.auth, "scopes", [])
         if self.__roles:
-            role_scopes = {s.lstrip("role:") for s in user_scopes if s.startswith("role:")}
-            if not any(role in role_scopes for role in self.__roles):
+            user_roles = set(getattr(request.state, "user_roles", []))
+            if not self.__roles.intersection(user_roles):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Insufficient permissions."
@@ -47,11 +46,21 @@ def get_current_user(
     """Get the current user
     """
     if not request.user.is_authenticated:
-        return
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail="Not authenticated.",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
 
     # Use cached user from middleware if available
     if not (user := getattr(request.state, "user", None)):
         user = user_manager.get_by_name(request.user.username)
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="User does not exist"
+            )
     
     sessionInfo = UserSessionInfo.model_validate(user, from_attributes=True)
 
@@ -61,4 +70,4 @@ def get_current_user(
     return sessionInfo
 
 
-CurrentUser = Annotated[UserSessionInfo | None, Depends(get_current_user)]
+CurrentUser = Annotated[UserSessionInfo, Depends(get_current_user)]
