@@ -1,18 +1,18 @@
 import logging
 
-from sqlmodel import Session, select
+from sqlmodel import select
 
-from app.database import DatabaseContext
-from app.core.settings import app_settings
-from app.managers import UserManager
-from app.models.auth import User
+import app.constants as constants
+from app.core.container import DIContainer
+from app.models.auth import Role, User
 from app.models.food import FoodCategory, FoodItem, NutritionContent
 
 
 logger = logging.getLogger(__name__)
 
-__app_db_context = DatabaseContext(str(app_settings.DB_DSN))
-__user_manager = UserManager(__app_db_context)
+__app_db_context = DIContainer.app_db_context()
+__role_manager = DIContainer.role_manager()
+__user_manager = DIContainer.user_manager()
 
 
 def init_db() -> None:
@@ -27,9 +27,10 @@ def init_db() -> None:
 def seed_db() -> None:
     """Seed the database with initial data."""
     try:
+        __seed_roles()
+        __seed_admin_user()
+        __seed_basic_user()
         with __app_db_context.get_session() as db_session:
-            __seed_admin_user(db_session)
-
             if db_session.exec(select(1).select_from(FoodCategory)).first() is None:
                 db_session.add_all(__food_categories)
 
@@ -42,20 +43,38 @@ def seed_db() -> None:
         raise e
 
 
-def __seed_admin_user(db_session: Session) -> None:
-    admin_email = "admin@kalorie-tracker.com"
-    user = __user_manager.get_by_email(admin_email)
-    if user:
-        db_session.delete(user)
-        db_session.commit()
-    
-    user = User(
-        username="admin",
-        email_address=admin_email,
-        is_active=True,
-    )
+def __seed_roles() -> None:
+    roles_names = list(constants.Roles)
+    for role_name in roles_names:
+        if __role_manager.role_exists(role_name):
+            continue
+        __role_manager.create(Role(name=role_name))
 
-    user = __user_manager.create(user, "admin123!")
+
+def __seed_admin_user() -> None:
+    user = __user_manager.get_by_email(constants.Users.admin_user)
+    if not user:
+        user = User(
+            username="admin",
+            email_address=constants.Users.admin_user,
+            is_active=True,
+        )
+        __user_manager.create(user, constants.Users.password)
+
+    __user_manager.add_to_role(user, constants.Roles.ADMINISTRATOR)
+
+
+def __seed_basic_user() -> None:
+    user = __user_manager.get_by_email(constants.Users.basic_user)
+    if not user:
+        user = User(
+            username="basic",
+            email_address=constants.Users.basic_user,
+            is_active=True,
+        )
+        __user_manager.create(user, constants.Users.password)
+
+    __user_manager.add_to_role(user, constants.Roles.VIEWER)
 
 
 __food_categories = (
@@ -94,3 +113,9 @@ __food_items = (
         food_categories=[__food_categories[1]]
     )
 )
+
+
+if __name__ == "__main__":
+    container = DIContainer()
+    init_db()
+    seed_db()

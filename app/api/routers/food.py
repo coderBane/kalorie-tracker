@@ -4,9 +4,12 @@ from typing import Annotated
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, HTTPException, Response, Depends, Query
 
+from app.api.dependencies import Authorize
+from app.constants import Roles as roles
 from app.core.container import DIContainer
 from app.schemas.common import Error, PaginationResponse
 from app.schemas.food import (
+    FoodCategoryUpdate,
     FoodCategoryResponse,
     FoodItemEntry,
     FoodItemsFilter,
@@ -29,6 +32,38 @@ def get_food_categories(
     """
     categories = food_service.get_food_categories(name)
     return categories
+
+
+food_editor_check = Authorize(
+    roles=[
+        roles.ADMINISTRATOR, 
+        roles.EDITOR, 
+        roles.FOOD_ADMIN, 
+        roles.FOOD_EDITOR
+    ]
+)
+
+
+@food_router.put(
+    "/categories/{food_category_id}", 
+    operation_id="UpdateFoodCategory", 
+    status_code=204, 
+    dependencies=[Depends(food_editor_check)]
+)
+@inject
+def update_food_category(
+    food_category_id: UUID, 
+    schema: FoodCategoryUpdate, 
+    food_service: FoodService = Depends(Provide[DIContainer.food_service])
+):
+    """Update a food category.
+    """
+    result = food_service.update_food_category(food_category_id, schema)
+    if isinstance(result, Error):
+        raise HTTPException(
+            status_code=result.error_type.value, 
+            detail=result.details
+        )
 
 
 @food_router.get("/items", operation_id="ListFoodItems", response_model=list[FoodItemsResponse])
@@ -69,7 +104,12 @@ def get_food_item(
     return food_item
 
 
-@food_router.post("/items", operation_id="CreateFoodItem", status_code=201)
+@food_router.post(
+    "/items", 
+    operation_id="CreateFoodItem", 
+    status_code=201,
+    dependencies=[Depends(food_editor_check)]
+)
 @inject
 def create_food_item(
     food_entry: FoodItemEntry, 
@@ -87,7 +127,12 @@ def create_food_item(
     return item_id
 
 
-@food_router.put("/items/{food_id}", operation_id="UpdateFoodItem", status_code=204)
+@food_router.put(
+    "/items/{food_id}", 
+    operation_id="UpdateFoodItem", 
+    status_code=204, 
+    dependencies=[Depends(food_editor_check)]
+)
 @inject
 def update_food_item(
     food_id: UUID, 
@@ -104,7 +149,12 @@ def update_food_item(
         )
 
 
-@food_router.delete("/items/{food_id}", operation_id="DeleteFoodItem", status_code=204)
+@food_router.delete(
+    "/items/{food_id}", 
+    operation_id="DeleteFoodItem", 
+    status_code=204, 
+    dependencies=[Depends(Authorize(roles=[roles.ADMINISTRATOR, roles.FOOD_ADMIN]))]
+)
 @inject
 def delete_food_item(
     food_id: UUID, 

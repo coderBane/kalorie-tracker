@@ -1,4 +1,5 @@
 from uuid import UUID
+
 from pydantic import BaseModel, field_validator
 
 
@@ -19,6 +20,7 @@ class TokenResponse(BaseModel):
 
 
 class UserSessionInfo(BaseModel):
+    email_address: str
     username: str
     avatar_uri: str | None = None
     ip_address: str | None = None

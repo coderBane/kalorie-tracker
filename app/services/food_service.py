@@ -12,6 +12,7 @@ from app.queries.food_queries import (
 from app.repositories import FoodCategoryRepository, FoodItemRepository
 from app.schemas.common import Error, PagedList
 from app.schemas.food import (
+    FoodCategoryUpdate,
     FoodCategoryResponse, 
     FoodItemEntry, 
     FoodItemResponse, 
@@ -54,6 +55,27 @@ class FoodService:
             FoodCategoryResponse.model_validate(category, from_attributes=True) 
             for category in categories
         ]
+    
+    def update_food_category(self, category_id: UUID, schema: FoodCategoryUpdate) -> UUID | Error:
+        """Update an existing food category.
+        """
+        category = self.__food_category_repository.get_by_id(category_id)
+        if not category:
+            return Error.not_found(
+                "FoodError.Category", 
+                f"Category (ID: {category_id}) does not exist"
+            )
+        
+        category = category.sqlmodel_update(schema)
+        if self.__food_category_repository.exists(category):
+            return Error.conflict(
+                "FoodError.Category", 
+                f"Food category (Name: {category.name}) already exists"
+            )
+        
+        self.__food_category_repository.update(category)
+
+        return category.id
 
     def get_food_items(self, filter: FoodItemsFilter) -> PagedList[FoodItemsResponse]:
         """Retrieve a list of food items.

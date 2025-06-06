@@ -7,13 +7,17 @@ from app.models import Entity
 
 
 class UserRole(SQLModel, table=True):
-    """Model representing a user/role association.
+    """Model representing a link between a user and a role.
     """
 
     __tablename__ = "auth_user_role" # type: ignore
 
-    user_id: UUID | None = Field(default=None, foreign_key="auth_user.id", primary_key=True)
-    role_id: UUID | None = Field(default=None, foreign_key="auth_role.id", primary_key=True)
+    user_id: UUID | None = Field(
+        default=None, foreign_key="auth_user.id", primary_key=True, ondelete="CASCADE"
+    )
+    role_id: UUID | None = Field(
+        default=None, foreign_key="auth_role.id", primary_key=True, ondelete="CASCADE"
+    )
 
     user: 'User' = Relationship(back_populates="user_roles")
     role: 'Role' = Relationship(back_populates="user_roles")
@@ -28,7 +32,10 @@ class Role(Entity, table=True):
     name: str = Field(max_length=256, index=True, unique=True)
     description: str | None = None
 
-    user_roles: list[UserRole] = Relationship(back_populates="role")
+    user_roles: list[UserRole] = Relationship(back_populates="role", passive_deletes="all")
+
+    def __str__(self) -> str:
+        return self.name
 
 
 class User(Entity, table=True):
@@ -48,7 +55,7 @@ class User(Entity, table=True):
     password_history: list["UserPasswordHistory"] = Relationship(
         back_populates="user", cascade_delete=True
     )
-    user_roles: list[UserRole] = Relationship(back_populates="user")
+    user_roles: list[UserRole] = Relationship(back_populates="user", passive_deletes="all")
 
 
 class UserPasswordHistory(Entity, table=True):
