@@ -7,6 +7,12 @@ from app.models.food import NutritionContent
 from app.schemas.common.pagination import PaginationFilter
 
 
+class FoodCategoryUpdate(BaseModel):
+    name: str = Field()
+    description: str | None = None
+    image_uri: str | None = None
+
+
 class FoodCategoryResponse(BaseModel):
     id: UUID
     name: str
