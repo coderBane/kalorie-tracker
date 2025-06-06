@@ -4,6 +4,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlmodel import SQLModel, Column, String, Field, Relationship
 
 from app.models import AuditableEntity
+from app.validators.common import NotEmptyStr
 
 
 class FoodItemCategory(SQLModel, table=True):
@@ -22,11 +23,13 @@ class FoodCategory(AuditableEntity, table=True):
 
     __tablename__ = "food_category" # type: ignore
 
-    name: str = Field(max_length=128, index=True, unique=True)
+    name: NotEmptyStr = Field(max_length=128, index=True, unique=True)
     description: str | None = None
     image_uri: str | None = None
 
-    food_items: list["FoodItem"] = Relationship(back_populates="food_categories", link_model=FoodItemCategory)
+    food_items: list["FoodItem"] = Relationship(
+        back_populates="food_categories", link_model=FoodItemCategory
+    )
 
 
 class NutritionContent(SQLModel):
@@ -50,9 +53,9 @@ class FoodItem(AuditableEntity, table=True):
 
     __tablename__ = "food_item" # type: ignore
 
-    name: str = Field(max_length=128, index=True, unique=True)
-    description: str
-    serving_size: str = Field(max_length=32)
+    name: NotEmptyStr = Field(max_length=128, index=True, unique=True)
+    description: NotEmptyStr
+    serving_size: NotEmptyStr = Field(max_length=32)
     calories_per_serving: float = Field(ge=0.0)
     nutrition_content: NutritionContent = Field(sa_column=Column(JSONB, nullable=False))
     image_uri: str | None = None
@@ -68,10 +71,10 @@ class Recipe(AuditableEntity, table=True):
     __tablename__ = "recipe" # type: ignore
 
     food_item_id: UUID = Field(foreign_key="food_item.id", ondelete="CASCADE")
-    name: str = Field(max_length=128, index=True, unique=True)
+    name: NotEmptyStr = Field(max_length=128, index=True, unique=True)
     description: str | None = None
     ingredients: list[str] = Field(sa_column=Column(ARRAY(String, dimensions=1)))
-    instructions: str
+    instructions: NotEmptyStr
     serving_size: int = Field(gt=0)
     nutrition_content: NutritionContent | None = Field(sa_column=Column(JSONB))
 

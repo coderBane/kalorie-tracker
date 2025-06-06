@@ -36,6 +36,14 @@ types-passlib = "^1.7.7.20250602"
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.coverage.report]
+exclude_also = [
+    'def __repr__',
+    'raise NotImplementedError',
+    'if __name__ == .__main__.:',
+    '@(abc\.)?abstractmethod',
+]
+
 [tool.mypy]
 strict = true
 exclude = ["venv", ".venv"]
