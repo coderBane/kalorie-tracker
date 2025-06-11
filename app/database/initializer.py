@@ -30,6 +30,7 @@ def seed_db() -> None:
         __seed_roles()
         __seed_admin_user()
         __seed_basic_user()
+        __seed_app_user()
         with __app_db_context.get_session() as db_session:
             if db_session.exec(select(1).select_from(FoodCategory)).first() is None:
                 db_session.add_all(__food_categories)
@@ -75,6 +76,32 @@ def __seed_basic_user() -> None:
         __user_manager.create(user, constants.Users.password)
 
     __user_manager.add_to_role(user, constants.Roles.VIEWER)
+
+def __seed_app_user() -> None:
+    from app.models.user import AppUser, ActivityLevel, Gender, HealthGoal
+
+    user = __user_manager.get_by_email("app.user@mail.com")
+    if not user:
+        user = User(
+            username="app_user", 
+            email_address="app.user@mail.com", 
+            is_active=True,
+        )
+
+        user_profile = AppUser(
+            first_name="John", 
+            last_name="Doe", 
+            age = 30,
+            gender=Gender.male,
+            weight_kg=167.58, 
+            height_cm=180,
+            activity_level=ActivityLevel.lightly_active, 
+            health_goal=HealthGoal.maintenance
+        )
+
+        user.app_user = user_profile
+
+        __user_manager.create(user, constants.Users.password)
 
 
 __food_categories = (
