@@ -1,5 +1,6 @@
 from collections.abc import Sequence
-from typing import AbstractSet, Annotated, Self
+from enum import StrEnum
+from typing import AbstractSet, Annotated, Any, Self
 from uuid import UUID
 
 from pydantic import (
@@ -7,8 +8,11 @@ from pydantic import (
     AfterValidator, 
     EmailStr, 
     Field, 
+    field_validator,  
     model_validator
 )
+
+from app.models.user import ActivityLevel, Gender, HealthGoal
 
 
 def validate_password(value: str) -> str:
@@ -25,10 +29,16 @@ Password = Annotated[str, AfterValidator(validate_password)]
 
 
 class UserIn(BaseModel):
-    email_address: EmailStr = Field(min_length=6, max_length=256)
     username: str | None = Field(None, min_length=2, max_length=256)
     phone_number: str | None = Field(None, min_length=7, max_length=15)
     avatar_uri: str | None = None
+
+
+class UserEntry(UserIn):
+    email_address: EmailStr = Field(min_length=6, max_length=256)
+    password: Password = Field(min_length=8, max_length=32)
+    is_active: bool = True
+    roles: AbstractSet[str] = set()
 
     @model_validator(mode="after")
     def set_username(self) -> Self:
@@ -37,17 +47,13 @@ class UserIn(BaseModel):
         return self
 
 
-class UserEntry(UserIn):
-    password: Password = Field(min_length=8, max_length=32)
-    is_active: bool = True
-    roles: AbstractSet[str] = set()
-
-
 class UserProfileUpdate(UserIn):
-    email_address: EmailStr = Field(min_length=6, max_length=256)
-    username: str | None = Field(None, min_length=2, max_length=256)
-    phone_number: str | None = Field(None, min_length=7, max_length=15)
-    avatar_uri: str | None = None
+    age : int = Field(ge=16)
+    gender: Gender
+    height_cm: float | None = None
+    weight_kg: float | None = None
+    activity_level: ActivityLevel
+    health_goal: HealthGoal
 
 
 class UserPasswordUpdate(BaseModel):
@@ -67,7 +73,23 @@ class UserOut(BaseModel):
 
 
 class UserProfile(UserOut):
-    pass
+    phone_number: str | None
+    full_name: str
+    age : int
+    gender: str
+    height_cm: float | None
+    weight_kg: float | None
+    activity_level: str
+    health_goal: str
+
+    @field_validator('activity_level', 'gender', 'health_goal', mode='before')
+    @classmethod
+    def convert_enum_to_str(cls, value: Any) -> Any:
+        if isinstance(value, StrEnum):
+            return (
+                value.value.replace('_', ' ').title()
+            )
+        return value
 
 
 class UserSummary(UserOut):

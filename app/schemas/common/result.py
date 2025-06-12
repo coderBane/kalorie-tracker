@@ -9,6 +9,7 @@ class ErrorType(Enum):
 
     INVALID = 400
     UNAUTHORIZED = 401
+    FORBIDDEN = 403
     NOTFOUND = 404
     CONFLICT = 409
     PROBLEM = 500
@@ -69,12 +70,20 @@ class Error:
     def conflict(title: str, details: str) -> "Error":
         return Error(ErrorType.CONFLICT, title, details)
     
-    @classmethod
-    def unauthorized(cls, details: str | None = None) -> "Error":
+    @staticmethod
+    def unauthorized(details: str | None = None) -> "Error":
         return Error(
             ErrorType.UNAUTHORIZED, 
             "AuthError.InvalidCredentials", 
             (details or "Could not validate credentials")
+        )
+    
+    @staticmethod
+    def forbidden(details: str | None = None) -> "Error":
+        return Error(
+            ErrorType.FORBIDDEN, 
+            "AuthError.Permissions", 
+            (details or "Insufficient permissions.")
         )
 
     @staticmethod

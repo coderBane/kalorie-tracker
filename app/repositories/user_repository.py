@@ -8,6 +8,7 @@ from typing_extensions import override
 from sqlmodel import Session, col, select
 
 from app.models.auth import Role, User, UserRole
+from app.models.user import AppUser
 from app.repositories.base import BaseRepository
 
 
@@ -32,7 +33,7 @@ class UserRoleRepository(ABC):
         Returns:
             Sequence[str]: A list of role names.
         """
-
+    
     @abstractmethod
     def is_in_role(self, user: User, role_name: str) -> bool:
         """Check if the user is a member of the named role.
@@ -57,6 +58,15 @@ class UserRepository(BaseRepository[User], UserRoleRepository):
         """Get a user by their username.
         """
         return self.find(col(User.username).ilike(username))
+    
+    def get_profile(self, user: User) -> AppUser:
+        """Get the `AppUser` (user profile) entity.
+        """
+        with self._db_session_factory() as session:
+            return session.exec(statement=(
+                select(AppUser)
+                    .where(col(AppUser.auth_user_id) == user.id)
+            )).one()
 
     @override
     def add_to_role(self, user: User, role_name: str) -> None:
