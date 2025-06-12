@@ -1,3 +1,4 @@
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, field_validator
@@ -8,7 +9,7 @@ class TokenPayload(BaseModel):
 
     @field_validator("sub", mode="before")
     @classmethod
-    def validate_sub(cls, value):
+    def validate_sub(cls, value) -> Any:
         if isinstance(value, str):
             return UUID(value)
         return value
