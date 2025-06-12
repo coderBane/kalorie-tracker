@@ -25,14 +25,24 @@ dependencies = [
 package-mode = false
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.3.5"
 devtools = "^0.12.2"
+pytest = "^8.3.5"
 coverage = "^7.8.0"
+factory-boy = "^3.3.3"
 mypy = "^1.15.0"
+types-passlib = "^1.7.7.20250602"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.coverage.report]
+exclude_also = [
+    'def __repr__',
+    'raise NotImplementedError',
+    'if __name__ == .__main__.:',
+    '@(abc\.)?abstractmethod',
+]
 
 [tool.mypy]
 strict = true
