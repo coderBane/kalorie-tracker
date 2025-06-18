@@ -72,3 +72,10 @@ class DIContainer(containers.DeclarativeContainer):
         AuthService,
         user_manager=user_manager
     )
+
+    ### users ##
+    
+    user_service = providers.Factory(
+        UserService,
+        user_repo=user_repository
+    )

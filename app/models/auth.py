@@ -1,9 +1,13 @@
+from typing import Optional, TYPE_CHECKING
 from uuid import UUID
 
-from pydantic import EmailStr
+from pydantic import EmailStr, computed_field
 from sqlmodel import SQLModel, Field, Relationship
 
 from app.models import Entity
+
+if TYPE_CHECKING:
+    from app.models.user import AppUser
 
 
 class UserRole(SQLModel, table=True):
@@ -52,10 +56,21 @@ class User(Entity, table=True):
     access_failed_count: int = 0
     avatar_uri: str | None = None
 
+    app_user: Optional["AppUser"] = Relationship(
+        back_populates="auth_user", 
+        passive_deletes="all", 
+        sa_relationship_kwargs={'uselist': False}
+    )
     password_history: list["UserPasswordHistory"] = Relationship(
         back_populates="user", cascade_delete=True
     )
     user_roles: list[UserRole] = Relationship(back_populates="user", passive_deletes="all")
+
+    @computed_field
+    @property
+    def name(self) -> str | None:
+        if self.app_user:
+            return self.app_user.full_name
 
 
 class UserPasswordHistory(Entity, table=True):

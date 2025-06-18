@@ -9,7 +9,7 @@ from app.core.container import DIContainer
 from app.managers import RoleManager, UserManager
 from app.models.auth import User
 from app.schemas.common import Error
-from app.schemas.user import (
+from app.schemas.users import (
     UserEntry,
     UserPasswordUpdate,
     UserProfileUpdate,
@@ -18,6 +18,7 @@ from app.schemas.user import (
     UserDetails,
     UserSummary,
 )
+from app.services import UserService
 
 
 users_router = APIRouter(
@@ -33,10 +34,20 @@ users_router = APIRouter(
     response_model=UserProfile, 
     status_code=status.HTTP_200_OK, 
 )
-def get_profile(current_user: CurrentUser):
+@inject
+def get_profile(
+    current_user: CurrentUser, 
+    user_service: UserService = Depends(Provide(DIContainer.user_service))
+):
     """Get my user profile.
     """
-    return current_user
+    app_user = user_service.get_profile(current_user.email_address)
+    if isinstance(app_user, Error):
+        raise HTTPException(
+            status_code=app_user.error_type.value, 
+            detail=app_user.details
+        )
+    return app_user
 
 
 @users_router.put(
@@ -46,25 +57,17 @@ def get_profile(current_user: CurrentUser):
 )
 @inject
 def update_profile(
-    profile_entry: UserProfileUpdate, 
+    schema: UserProfileUpdate, 
     current_user: CurrentUser, 
-    user_manager: UserManager = Depends(Provide(DIContainer.user_manager))
+    user_service: UserService = Depends(Provide(DIContainer.user_service))
 ):
     """Update my user profile.
     """
-    user = user_manager.get_by_email(current_user.email_address)
-    if not user:
+    user_id = user_service.update_profile(current_user.email_address, schema)
+    if isinstance(user_id, Error):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="User does not exist"
-        )
-
-    user = user.sqlmodel_update(profile_entry)
-    user = user_manager.update(user)
-    if isinstance(user, Error):
-        raise HTTPException(
-            status_code=user.error_type.value, 
-            detail=user.details
+            status_code=user_id.error_type.value, 
+            detail=user_id.details
         )
 
 
@@ -76,24 +79,11 @@ def update_profile(
 @inject
 def delete_profile(
     current_user: CurrentUser,
-    user_manager: UserManager = Depends(Provide(DIContainer.user_manager))
+    user_service: UserService = Depends(Provide(DIContainer.user_service))
 ):
     """Delete my user account.
     """
-    user = user_manager.get_by_email(current_user.email_address)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="User does not exist"
-        )
-    
-    if user_manager.is_in_role(user, role_consts.ADMINISTRATOR):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, 
-            detail="Administrators cannot delete themselves"
-        )
-    
-    result = user_manager.delete(user)
+    result = user_service.delete_account(current_user.email_address)
     if isinstance(result, Error):
         raise HTTPException(
             status_code=result.error_type.value, 

@@ -10,7 +10,6 @@ from typing import (
     overload,
 )
 
-from pydantic import BaseModel
 from sqlalchemy import ColumnElement
 from sqlalchemy.orm import QueryableAttribute, selectinload
 from sqlmodel import Session, select, func
