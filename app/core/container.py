@@ -1,6 +1,6 @@
 from dependency_injector import containers, providers
 
-from app.core.settings import app_settings
+from app.core.settings import get_app_settings
 from app.database import DatabaseContext
 from app.managers import *
 from app.repositories import *
@@ -22,11 +22,13 @@ class DIContainer(containers.DeclarativeContainer):
         ]
     )
 
+    app_settings = providers.Callable(get_app_settings)
+
     ## database ##
 
     app_db_context = providers.Singleton(
         DatabaseContext, 
-        connection_string=str(app_settings.DB_DSN))
+        connection_string=str(app_settings.provided.DB_DSN))
     
     ## food ##
     

@@ -14,8 +14,9 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-from app.core.settings import app_settings
-config.set_main_option("sqlalchemy.url", str(app_settings.DB_DSN))
+from app.core.settings import get_app_settings
+
+config.set_main_option("sqlalchemy.url", str(get_app_settings().DB_DSN))
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -23,6 +24,7 @@ from sqlmodel import SQLModel
 from app.models.auth import Role, User
 from app.models.food import FoodCategory, FoodItem
 from app.models.user import AppUser
+
 target_metadata = SQLModel.metadata
 
 # other values from the config, defined by the needs of env.py,
