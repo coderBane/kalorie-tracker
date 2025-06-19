@@ -22,7 +22,6 @@ jobs:
       id: python
       with:
         python-version: "3.11"
-        cache: "poetry"
     
     - name: Install Poetry via pipx
       run: |
