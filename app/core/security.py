@@ -4,7 +4,7 @@ from typing import Any
 import jwt
 from passlib.context import CryptContext
 
-from app.core.settings import app_settings
+from app.core.settings import get_app_settings
 
 
 class TokenProvider:
@@ -22,6 +22,8 @@ class TokenProvider:
         Returns:
             str: The generated access token.
         """
+        app_settings = get_app_settings()
+
         payload = request.copy()
 
         expire = datetime.now(timezone.utc) + \
@@ -59,6 +61,8 @@ class TokenValidator:
         Returns:
             (dict[str, Any] | None): The decoded payload if the token is valid, otherwise None.
         """
+        app_settings = get_app_settings()
+        
         payload = jwt.decode(
             token, 
             app_settings.JWT.SECRET_KEY,
