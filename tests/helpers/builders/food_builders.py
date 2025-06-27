@@ -20,11 +20,16 @@ class FoodCategoryBuilder(ModelBuilder["FoodCategoryBuilder", FoodCategory]):
     __image_uri: Optional[str] = None
 
     def with_name(self, name: str) -> Self: 
-        self.__name = name; return self
+        self.__name = name
+        return self
+    
     def with_description(self, description: Optional[str]) -> Self: 
-        self.__description = description; return self
+        self.__description = description
+        return self
+    
     def with_image_uri(self, image_uri: Optional[str]) -> Self: 
-        self.__image_uri = image_uri; return self
+        self.__image_uri = image_uri
+        return self
 
     @override
     def build(self) -> FoodCategory:
@@ -33,7 +38,7 @@ class FoodCategoryBuilder(ModelBuilder["FoodCategoryBuilder", FoodCategory]):
             description=self.__description, 
             image_uri=self.__image_uri
         )
-    
+
 
 class FoodItemBuilder(ModelBuilder["FoodItemBuilder", FoodItem]):
 
@@ -48,20 +53,32 @@ class FoodItemBuilder(ModelBuilder["FoodItemBuilder", FoodItem]):
     __recipes: list[Recipe] = []
 
     def with_id(self, id: UUID) -> Self: 
-        self.__id = id; return self
+        self.__id = id
+        return self
+    
     def with_name(self, name: str) -> Self: 
-        self.__name = name; return self
+        self.__name = name
+        return self
+    
     def with_description(self, description: str) -> Self: 
-        self.__description = description; return self
+        self.__description = description
+        return self
+    
     def with_serving_size(self, serving_size: str) -> Self: 
-        self.__serving_size = serving_size; return self
+        self.__serving_size = serving_size
+        return self
+    
     def with_calories_per_serving(self, calories: float) -> Self: 
-        self.__calories_per_serving = calories; return self
+        self.__calories_per_serving = calories
+        return self
+    
     def with_image_uri(self, image_uri: Optional[str]) -> Self: 
-        self.__image_uri = image_uri; return self
+        self.__image_uri = image_uri
+        return self
     
     def with_nutrition_content(self, nutrition_content: NutritionContent) -> Self: 
-        self.__nutrition_content = nutrition_content; return self
+        self.__nutrition_content = nutrition_content
+        return self
     
     def with_food_categories(self, *categories: FoodCategory) -> Self:
         self.__food_categories.extend(categories)
@@ -111,7 +128,7 @@ class FoodItemBuilder(ModelBuilder["FoodItemBuilder", FoodItem]):
 class RecipeBuilder(ModelBuilder["RecipeBuilder", Recipe]):
 
     __food_item_id: Optional[UUID] = None # Must be set for a valid Recipe
-    __name: str = f"Test Recipe"
+    __name: str = "Test Recipe"
     __description: Optional[str] = "Test recipe description"
     __ingredients: list[str] = ["1 cup test ingredient"]
     __instructions: str = "Test instructions."
@@ -119,21 +136,32 @@ class RecipeBuilder(ModelBuilder["RecipeBuilder", Recipe]):
     __nutrition_content: Optional[NutritionContent] = None
 
     def with_name(self, name: str) -> Self: 
-        self.__name = name; return self
+        self.__name = name
+        return self
+    
     def with_description(self, description: Optional[str]) -> Self: 
-        self.__description = description; return self
+        self.__description = description
+        return self
+    
     def with_ingredients(self, ingredients: Sequence[str]) -> Self: 
-        self.__ingredients.extend(ingredients); return self
+        self.__ingredients.extend(ingredients)
+        return self
+    
     def with_instructions(self, instructions: str) -> Self: 
-        self.__instructions = instructions; return self
+        self.__instructions = instructions
+        return self
+    
     def with_serving_size(self, serving_size: int) -> Self: 
-        self.__serving_size = serving_size; return self
+        self.__serving_size = serving_size
+        return self
     
     def with_food_item_id(self, food_item_id: UUID) -> Self: 
-        self.__food_item_id = food_item_id; return self
+        self.__food_item_id = food_item_id
+        return self
     
     def with_nutrition_content(self, nutrition_content: Optional[NutritionContent]) -> Self: 
-        self.__nutrition_content = nutrition_content; return self
+        self.__nutrition_content = nutrition_content
+        return self
 
     @override
     def build(self) -> Recipe:

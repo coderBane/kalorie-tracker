@@ -1,16 +1,16 @@
+from typing import Annotated, Any
 from uuid import UUID
-from typing import Annotated
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, HTTPException, Response, Depends, Query
 
 from app.api.dependencies import Authorize
-from app.constants import Roles as roles
+from app.constants import roles
 from app.core.container import DIContainer
 from app.schemas.common import Error, PaginationResponse
 from app.schemas.food import (
-    FoodCategoryUpdate,
     FoodCategoryResponse,
+    FoodCategoryUpdate,
     FoodItemEntry,
     FoodItemsFilter,
     FoodItemResponse,
@@ -22,12 +22,16 @@ from app.services.food_service import FoodService
 food_router = APIRouter(prefix="/food", tags=["Food"])
 
 
-@food_router.get("/categories", operation_id="ListFoodCategories", response_model=list[FoodCategoryResponse])
+@food_router.get(
+    "/categories", 
+    operation_id="ListFoodCategories", 
+    response_model=list[FoodCategoryResponse]
+)
 @inject
 def get_food_categories(
     name: str | None = None, 
     food_service: FoodService = Depends(Provide[DIContainer.food_service])
-):
+) -> Any:
     """Retrieve a list of food categories.
     """
     categories = food_service.get_food_categories(name)
@@ -55,7 +59,7 @@ def update_food_category(
     food_category_id: UUID, 
     schema: FoodCategoryUpdate, 
     food_service: FoodService = Depends(Provide[DIContainer.food_service])
-):
+) -> Any:
     """Update a food category.
     """
     result = food_service.update_food_category(food_category_id, schema)
@@ -66,13 +70,17 @@ def update_food_category(
         )
 
 
-@food_router.get("/items", operation_id="ListFoodItems", response_model=list[FoodItemsResponse])
+@food_router.get(
+    "/items", 
+    operation_id="ListFoodItems", 
+    response_model=list[FoodItemsResponse]
+)
 @inject
 def get_food_items(
     response: Response, 
     filter: Annotated[FoodItemsFilter, Query()], 
     food_service: FoodService = Depends(Provide[DIContainer.food_service])
-):
+) -> Any:
     """Retrieve a list of food items.
     """
     items = food_service.get_food_items(filter)
@@ -86,12 +94,16 @@ def get_food_items(
     return items
 
 
-@food_router.get("/items/{food_id}", operation_id="GetFoodItem", response_model=FoodItemResponse)
+@food_router.get(
+    "/items/{food_id}", 
+    operation_id="GetFoodItem", 
+    response_model=FoodItemResponse
+)
 @inject
 def get_food_item(
     food_id: UUID, 
     food_service: FoodService = Depends(Provide[DIContainer.food_service])
-):
+) -> Any:
     """Retrieve a food item.
     """
     food_item = food_service.get_food_item(food_id)
@@ -114,7 +126,7 @@ def get_food_item(
 def create_food_item(
     food_entry: FoodItemEntry, 
     food_service: FoodService = Depends(Provide[DIContainer.food_service])
-):
+) -> Any:
     """Create a new food item.
     """
     item_id =  food_service.create_food_item(food_entry)
@@ -138,7 +150,7 @@ def update_food_item(
     food_id: UUID, 
     food_entry: FoodItemEntry, 
     food_service: FoodService = Depends(Provide[DIContainer.food_service])
-):
+) -> Any:
     """Update an existing food item.
     """
     result = food_service.update_food_item(food_id, food_entry)
@@ -159,7 +171,7 @@ def update_food_item(
 def delete_food_item(
     food_id: UUID, 
     food_service: FoodService = Depends(Provide[DIContainer.food_service])
-):
+) -> Any:
     """Delete a food item.
     """
     result = food_service.delete_food_item(food_id)

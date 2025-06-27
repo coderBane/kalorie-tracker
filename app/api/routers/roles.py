@@ -1,17 +1,16 @@
+from typing import Any
 from uuid import UUID
+
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, HTTPException, status, Depends
 
 from app.api.dependencies import Authorize
-from app.constants import Roles as role_consts
+from app.constants import roles as role_consts
 from app.core.container import DIContainer
 from app.managers import RoleManager
 from app.models.auth import Role
 from app.schemas.common import Error
-from app.schemas.roles import (
-    RoleCreate,
-    RoleUpdate
-)
+from app.schemas.roles import RoleCreate, RoleUpdate
 
 
 roles_router = APIRouter(
@@ -38,7 +37,7 @@ roles_router = APIRouter(
 @inject
 def get_roles(
     role_manager: RoleManager = Depends(Provide[DIContainer.role_manager])
-):
+) -> Any:
     """Retrieve a list of roles.
     """
     return role_manager.roles
@@ -54,16 +53,16 @@ def get_roles(
 def create_role(
     entry: RoleCreate, 
     role_manager: RoleManager = Depends(Provide[DIContainer.role_manager])
-):
+) -> Any:
     """Create a custom role.
     """
     role = Role.model_validate(entry, from_attributes=True)
 
-    role = role_manager.create(role)
-    if isinstance(role, Error):
+    result = role_manager.create(role)
+    if isinstance(result, Error):
         raise HTTPException(
-            status_code=role.error_type.value, 
-            detail=role.details
+            status_code=result.error_type.value, 
+            detail=result.details
         )
 
     return role
@@ -79,7 +78,7 @@ def update_role(
     role_id: UUID, 
     entry: RoleUpdate, 
     role_manager: RoleManager = Depends(Provide[DIContainer.role_manager])
-):
+) -> Any:
     """Update a role.
     """
     role = role_manager.get_by_id(role_id)
@@ -90,7 +89,7 @@ def update_role(
         )
     
     role.sqlmodel_update(entry)
-    role = role_manager.update(role)
+    role_manager.update(role)
 
 
 @roles_router.delete(
@@ -102,7 +101,7 @@ def update_role(
 def delete_role(
     role_id: UUID, 
     role_manager: RoleManager = Depends(Provide[DIContainer.role_manager])
-):
+) -> Any:
     """Remove a custom role.
     """
     role = role_manager.get_by_id(role_id)

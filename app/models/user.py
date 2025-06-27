@@ -1,6 +1,6 @@
 from enum import StrEnum
-from uuid import UUID
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from pydantic import computed_field
 from sqlmodel import Field, Relationship
@@ -40,7 +40,7 @@ class HealthGoal(StrEnum):
 class AppUser(Entity, table=True):
     """Model representing an application consumer."""
 
-    __tablename__ = "app_user" # type: ignore
+    __tablename__ = "app_user" # pyright: ignore[reportAssignmentType]
 
     auth_user_id: UUID | None = Field(
         default=None, 
@@ -63,27 +63,27 @@ class AppUser(Entity, table=True):
         sa_relationship_kwargs={"lazy": "selectin", "single_parent": True}
     )
 
-    @computed_field
+    @computed_field # type: ignore[prop-decorator]
     @property
     def full_name(self) -> str:
         return self.first_name + ' ' + self.last_name
     
-    @computed_field
+    @computed_field # type: ignore[prop-decorator]
     @property
     def email_address(self) -> str:
         return self.auth_user.email_address
 
-    @computed_field
+    @computed_field # type: ignore[prop-decorator]
     @property
     def username(self) -> str:
         return self.auth_user.username
     
-    @computed_field
+    @computed_field # type: ignore[prop-decorator]
     @property
     def phone_number(self) -> str | None:
         return self.auth_user.phone_number
     
-    @computed_field
+    @computed_field # type: ignore[prop-decorator]
     @property
     def avatar_uri(self) -> str | None:
         return self.auth_user.avatar_uri

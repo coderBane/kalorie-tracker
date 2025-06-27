@@ -66,7 +66,7 @@ class TestFoodItem:
                 name="Test", description="Test desc", serving_size="100g",
                 calories_per_serving=100
                 # nutrition_content is missing
-            ) # type: ignore
+            ) # pyright: ignore[reportCallIssue]
         with pytest.raises(ValidationError, match=r"(nutrition_content|Field required)"):
             FoodItem.model_validate(food_item.model_dump())
 

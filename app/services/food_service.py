@@ -1,4 +1,4 @@
-from typing import Sequence
+from collections.abc import Sequence
 from uuid import UUID
 
 from sqlmodel import col
@@ -12,12 +12,12 @@ from app.queries.food_queries import (
 from app.repositories import FoodCategoryRepository, FoodItemRepository
 from app.schemas.common import Error, PagedList
 from app.schemas.food import (
-    FoodCategoryUpdate,
     FoodCategoryResponse, 
+    FoodCategoryUpdate,
     FoodItemEntry, 
+    FoodItemsFilter, 
     FoodItemResponse, 
-    FoodItemsResponse, 
-    FoodItemsFilter
+    FoodItemsResponse
 )
 from app.utils.collection import compare_collections
 
@@ -39,13 +39,19 @@ class FoodService:
         """
         category = self.__food_category_repository.get_by_id(category_id)
         if not category:
-            return Error.not_found("FoodError.NotFound", f"Food Category (ID: {category_id}) does not exist.")
+            return Error.not_found(
+                "FoodError.NotFound", 
+                f"Food Category (ID: {category_id}) does not exist."
+            )
         
         self.__food_category_repository.delete(category)
 
         return category_id
     
-    def get_food_categories(self, name: str | None = None) -> Sequence[FoodCategoryResponse]:
+    def get_food_categories(
+        self, 
+        name: str | None = None
+    ) -> Sequence[FoodCategoryResponse]:
         """Retrieve a list of food categories.
         """
         query = FoodCategoriesQuery(name)
@@ -56,7 +62,11 @@ class FoodService:
             for category in categories
         ]
     
-    def update_food_category(self, category_id: UUID, schema: FoodCategoryUpdate) -> UUID | Error:
+    def update_food_category(
+        self, 
+        category_id: UUID, 
+        schema: FoodCategoryUpdate
+    ) -> UUID | Error:
         """Update an existing food category.
         """
         category = self.__food_category_repository.get_by_id(category_id)
@@ -133,7 +143,11 @@ class FoodService:
 
         return food_item.id
 
-    def update_food_item(self, food_id: UUID, food_entry: FoodItemEntry) -> Error | UUID:
+    def update_food_item(
+        self, 
+        food_id: UUID, 
+        food_entry: FoodItemEntry
+    ) -> Error | UUID:
         """Update an existing food item.
         """
         food_item = self.__food_item_repository.get_by_id(food_id)
@@ -154,7 +168,10 @@ class FoodService:
             col(FoodCategory.id).in_(food_entry.food_category_ids)
         )
 
-        comparison_result = compare_collections(current=categories, previous=food_item.food_categories)
+        comparison_result = compare_collections(
+            current=categories, 
+            previous=food_item.food_categories
+        )
         if comparison_result.has_changes():
             for c in comparison_result.added:
                 food_item.food_categories.append(c)
@@ -172,7 +189,10 @@ class FoodService:
         """
         food_item = self.__food_item_repository.get_by_id(food_id)
         if not food_item:
-            return Error.not_found("FoodError.NotFound", f"Food Item (ID: {food_id}) does not exist.")
+            return Error.not_found(
+                "FoodError.NotFound", 
+                f"Food Item (ID: {food_id}) does not exist."
+            )
         
         self.__food_item_repository.delete(food_item)
 

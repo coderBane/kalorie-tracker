@@ -2,9 +2,9 @@ from dependency_injector import containers, providers
 
 from app.core.settings import get_app_settings
 from app.database import DatabaseContext
-from app.managers import *
-from app.repositories import *
-from app.services import *
+from app.managers import *  # noqa: F403
+from app.repositories import *  # noqa: F403
+from app.services import *  # noqa: F403
 
 
 class DIContainer(containers.DeclarativeContainer):

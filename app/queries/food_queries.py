@@ -5,7 +5,7 @@ from sqlmodel import col, or_, func
 
 from app.database import QueryBuilder
 from app.models.food import FoodCategory, FoodItem, Recipe
-from app.schemas.food import FoodItemSortOrder, FoodItemsFilter
+from app.schemas.food import FoodItemsFilter, FoodItemSortOrder
 
 
 class FoodCategoriesQuery(QueryBuilder[FoodCategory]):
@@ -19,7 +19,7 @@ class FoodCategoriesQuery(QueryBuilder[FoodCategory]):
 
 
 class FoodItemQuery(QueryBuilder[FoodItem]):
-    def __init__(self, item_id: UUID, eager: bool = False):
+    def __init__(self, item_id: UUID, eager: bool = False) -> None:
         super().__init__(FoodItem)
 
         self._where(col(self.model.id) == item_id)
@@ -30,7 +30,7 @@ class FoodItemQuery(QueryBuilder[FoodItem]):
 
 
 class FoodItemsFilterQuery(QueryBuilder[FoodItem]):
-    def __init__(self, filter: FoodItemsFilter):
+    def __init__(self, filter: FoodItemsFilter) -> None:
         super().__init__(FoodItem)
 
         if filter.search:
@@ -58,6 +58,7 @@ class FoodItemsFilterQuery(QueryBuilder[FoodItem]):
                 self._order_by(self.model.name) # type: ignore
             case FoodItemSortOrder.NAME_DESC:
                 self._order_by_desc(self.model.name) # type: ignore
-            case _ as unreachable: assert_never(unreachable)
+            case _ as unreachable: 
+                assert_never(unreachable)
 
         self._paginate(skip=(filter.index - 1) * filter.size, take=filter.size)

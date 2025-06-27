@@ -5,7 +5,8 @@ from typing import TypeVar
 
 
 class ErrorType(Enum):
-    """Application error types with corresponding HTTP status codes."""
+    """Application error types with corresponding HTTP status codes.
+    """
 
     INVALID = 400
     UNAUTHORIZED = 401
@@ -25,13 +26,14 @@ class Error:
         title: str, 
         details: str, 
         failures: Mapping[str, list[str]] | None = None
-    ):
+    ) -> None:
         """
         Parameters:
             error_type (ErrorType): The type of the error.
             title (str): The title of the error.
             details (str): The details of the error.
-            failures (Mapping[str, list[str]]): A mapping of field names to lists of error messages.
+            failures (Mapping[str, list[str]]): 
+                A mapping of field names to lists of error messages.
         """
         self.__error_type = error_type
         self.__title = title
@@ -60,7 +62,11 @@ class Error:
     
     @staticmethod
     def validation(title: str, failures: Mapping[str, list[str]]) -> "Error":
-        return Error(ErrorType.INVALID, title, "One or more validation erors have occurred", failures)
+        return Error(
+            ErrorType.INVALID, title, 
+            "One or more validation erors have occurred", 
+            failures
+        )
 
     @staticmethod
     def not_found(title: str, details: str) -> "Error":
@@ -101,7 +107,7 @@ class PagedList(list[T]):
     """Paginated list of items.
     """
 
-    def __init__(self, items: Iterable[T], count: int, index: int, size: int):
+    def __init__(self, items: Iterable[T], count: int, index: int, size: int) -> None:
         """
         Parameters:
             items (list): The collection of items to be paginated.

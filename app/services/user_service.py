@@ -58,7 +58,7 @@ class UserService:
         if user is None:
             return user_errors.not_found()
 
-        if self.__user_repo.is_in_role(user, constants.Roles.ADMINISTRATOR):
+        if self.__user_repo.is_in_role(user, constants.roles.ADMINISTRATOR):
             return user_errors.super_user_delete_attempt()
         
         self.__user_repo.delete(user)

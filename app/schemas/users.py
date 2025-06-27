@@ -4,11 +4,11 @@ from typing import AbstractSet, Annotated, Any, Self
 from uuid import UUID
 
 from pydantic import (
-    BaseModel, 
     AfterValidator, 
+    BaseModel, 
     EmailStr, 
-    Field, 
-    field_validator,  
+    Field,
+    field_validator, 
     model_validator
 )
 
@@ -21,7 +21,9 @@ def validate_password(value: str) -> str:
         any(str.islower(c) for c in value) and
         any(str.isupper(c) for c in value)
     ):
-        raise ValueError("Password must include uppercase, lowercase letters, and digits")
+        raise ValueError(
+            "Password must include uppercase, lowercase letters, and digits"
+        )
     return value
 
 

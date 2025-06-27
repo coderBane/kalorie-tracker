@@ -1,10 +1,11 @@
+from typing import Any
 from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, HTTPException, status, Depends
 
 from app.api.dependencies import Authorize, CurrentUser
-from app.constants import Roles as role_consts
+from app.constants import roles
 from app.core.container import DIContainer
 from app.managers import RoleManager, UserManager
 from app.models.auth import User
@@ -38,7 +39,7 @@ users_router = APIRouter(
 def get_profile(
     current_user: CurrentUser, 
     user_service: UserService = Depends(Provide(DIContainer.user_service))
-):
+) -> Any:
     """Get my user profile.
     """
     app_user = user_service.get_profile(current_user.email_address)
@@ -60,7 +61,7 @@ def update_profile(
     schema: UserProfileUpdate, 
     current_user: CurrentUser, 
     user_service: UserService = Depends(Provide(DIContainer.user_service))
-):
+) -> Any:
     """Update my user profile.
     """
     user_id = user_service.update_profile(current_user.email_address, schema)
@@ -80,7 +81,7 @@ def update_profile(
 def delete_profile(
     current_user: CurrentUser,
     user_service: UserService = Depends(Provide(DIContainer.user_service))
-):
+) -> Any:
     """Delete my user account.
     """
     result = user_service.delete_account(current_user.email_address)
@@ -101,7 +102,7 @@ def change_password(
     password_entry: UserPasswordUpdate, 
     current_user: CurrentUser, 
     user_manager: UserManager = Depends(Provide(DIContainer.user_manager))
-):
+) -> Any:
     """Change my password.
     """
     user = user_manager.get_by_email(current_user.email_address)
@@ -128,9 +129,9 @@ users_manage_router = APIRouter(
     dependencies=[
         Depends(
             Authorize(roles=[
-                role_consts.ADMINISTRATOR, 
-                role_consts.IAM_ADMIN, 
-                role_consts.IAM_USER_ADMIN
+                roles.ADMINISTRATOR, 
+                roles.IAM_ADMIN, 
+                roles.IAM_USER_ADMIN
             ])
         )
     ]
@@ -146,7 +147,7 @@ users_manage_router = APIRouter(
 @inject
 def get_users(
     user_manager: UserManager = Depends(Provide(DIContainer.user_manager))
-):
+) -> Any:
     """Retrieve users.
     """
     return user_manager.users
@@ -162,7 +163,7 @@ def get_users(
 def get_user(
     user_id: UUID, 
     user_manager: UserManager = Depends(Provide(DIContainer.user_manager))
-):
+) -> Any:
     """Retrieve a user by their ID.
     """
     user = user_manager.get_by_id(user_id)
@@ -190,24 +191,24 @@ def get_user(
 def create_user(
     user_entry: UserEntry, 
     user_manager: UserManager = Depends(Provide(DIContainer.user_manager))
-):
+) -> Any:
     """Create a new user.
     """
     user = User.model_validate(user_entry, from_attributes=True)
     
-    user = user_manager.create(user, user_entry.password)
-    if isinstance(user, Error):
+    result = user_manager.create(user, user_entry.password)
+    if isinstance(result, Error):
         raise HTTPException(
-            status_code=user.error_type.value, 
-            detail=user.details
+            status_code=result.error_type.value, 
+            detail=result.details
         )
     
     if user_entry.roles:
-        user = user_manager.add_to_roles(user, user_entry.roles)
-        if isinstance(user, Error):
+        result = user_manager.add_to_roles(user, user_entry.roles)
+        if isinstance(result, Error):
             raise HTTPException(
-                status_code=user.error_type.value, 
-                detail=user.details
+                status_code=result.error_type.value, 
+                detail=result.details
             )
 
     return user
@@ -223,7 +224,7 @@ def update_user(
     user_id: UUID, 
     user_entry: UserEntry, 
     user_manager: UserManager = Depends(Provide(DIContainer.user_manager))
-):
+) -> Any:
     """Update a user.
     """
     user = user_manager.get_by_id(user_id)
@@ -234,11 +235,11 @@ def update_user(
         )
     
     user = user.sqlmodel_update(user_entry)
-    user = user_manager.update(user)
-    if isinstance(user, Error):
+    result = user_manager.update(user)
+    if isinstance(result, Error):
         raise HTTPException(
-            status_code=user.error_type.value, 
-            detail=user.details
+            status_code=result.error_type.value, 
+            detail=result.details
         )
 
 
@@ -252,7 +253,7 @@ def delete_user(
     user_id: UUID,
     current_user: CurrentUser, 
     user_manager: UserManager = Depends(Provide(DIContainer.user_manager))
-):
+) -> Any:
     """Delete a user.
     """
     user = user_manager.get_by_id(user_id)
@@ -286,7 +287,7 @@ def add_to_role(
     user_role: UserRoleRequest, 
     role_manager: RoleManager = Depends(Provide(DIContainer.role_manager)),   
     user_manager: UserManager = Depends(Provide(DIContainer.user_manager))
-):
+) -> Any:
     """
     """
     user = user_manager.get_by_email(user_role.user_email)
@@ -303,11 +304,11 @@ def add_to_role(
             detail="Role does not exist"
         )
     
-    user = user_manager.add_to_role(user, user_role.role_name)
-    if isinstance(user, Error):
+    result = user_manager.add_to_role(user, user_role.role_name)
+    if isinstance(result, Error):
         raise HTTPException(
-            status_code=user.error_type.value, 
-            detail=user.details
+            status_code=result.error_type.value, 
+            detail=result.details
         )
 
 
@@ -321,7 +322,7 @@ def remove_from_role(
     user_role: UserRoleRequest, 
     role_manager: RoleManager = Depends(Provide(DIContainer.role_manager)),   
     user_manager: UserManager = Depends(Provide(DIContainer.user_manager))
-):
+) -> Any:
     """
     """
     user = user_manager.get_by_email(user_role.user_email)
@@ -338,11 +339,11 @@ def remove_from_role(
             detail="Role does not exist"
         )
     
-    user = user_manager.remove_from_role(user, user_role.role_name)
-    if isinstance(user, Error):
+    result = user_manager.remove_from_role(user, user_role.role_name)
+    if isinstance(result, Error):
         raise HTTPException(
-            status_code=user.error_type.value, 
-            detail=user.details
+            status_code=result.error_type.value, 
+            detail=result.details
         )
 
 

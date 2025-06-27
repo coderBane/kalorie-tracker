@@ -1,7 +1,8 @@
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI
-from scalar_fastapi import get_scalar_api_reference
+from scalar_fastapi import get_scalar_api_reference # type: ignore[import-untyped]
 
 from app.api.routers.auth import auth_router
 from app.api.routers.food import food_router
@@ -13,7 +14,7 @@ from app.middlewares import *
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI): # type: ignore[no-untyped-def]
     init_db()
     seed_db()
     yield
@@ -34,8 +35,8 @@ app.include_router(users_router)
 
 
 @app.get("/scalar", include_in_schema=False)
-def scalar_html():
+def scalar_html() -> Any:
     return get_scalar_api_reference(
-        openapi_url=app.openapi_url, # type: ignore
+        openapi_url=app.openapi_url, # pyright: ignore
         title=app.title,
     )

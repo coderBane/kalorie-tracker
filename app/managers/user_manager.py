@@ -1,4 +1,4 @@
-from typing import AbstractSet, Any, Sequence
+from collections.abc import Sequence, Set
 from uuid import UUID
 
 from sqlmodel import col
@@ -28,7 +28,9 @@ class UserManager:
     def create(self, user: User, password: str) -> User | Error:
         """Creates a new user.
         """
-        if self.__user_repository.any(col(User.email_address).ilike(user.email_address)):
+        if self.__user_repository.any(
+            col(User.email_address).ilike(user.email_address)
+        ):
             return Error.conflict("AuthError.UserConflict", "Email already in use")
         
         if self.__user_repository.any(col(User.username).ilike(user.username)):
@@ -61,6 +63,7 @@ class UserManager:
             return Error.not_found("AuthError.UserNotFound", "User does not exist")
         
         self.__user_repository.delete(user)
+        return None
 
     def get_by_id(self, user_id: UUID) -> User | None:
         """Retrieves a user by their ID.
@@ -85,7 +88,7 @@ class UserManager:
 
         return user
     
-    def add_to_roles(self, user: User, role_names: AbstractSet[str]) -> User | Error:
+    def add_to_roles(self, user: User, role_names: Set[str]) -> User | Error:
         """Add the user to the named roles.
         """
         for role_name in role_names:
@@ -117,18 +120,30 @@ class UserManager:
         """Check if the user is a member of the named role.
         """
         return self.__user_repository.is_in_role(user, role_name)
-    
-    def change_password(self, user: User, current_password: str, new_password: str) -> Error | None:
+
+    def change_password(
+        self, 
+        user: User, 
+        current_password: 
+        str, new_password: str
+    ) -> Error | None:
         """Change the user's password.
         """
         assert user.password_hash
-        if not self.__password_hasher.verify_password(current_password, user.password_hash):
+        if not self.__password_hasher.verify_password(
+            hashed_password=user.password_hash, 
+            plain_password=current_password
+        ):
             return Error.invalid("AuthError.InvalidPassword", "Invalid password")
         if current_password == new_password:
-            return Error.invalid("AuthError.SamePassword", "New password cannot be the same as the old password")
+            return Error.invalid(
+                "AuthError.SamePassword", 
+                "New password cannot be the same as the old password"
+            )
         
         user.password_hash = self.__password_hasher.hash_password(new_password)
         self.__user_repository.update(user)
+        return None
 
 
     def check_password(self, user: User, password: str) -> bool:

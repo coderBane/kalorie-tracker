@@ -1,9 +1,9 @@
 import functools
 import secrets
-
+from collections.abc import Sequence
 from enum import StrEnum
 from pathlib import Path
-from typing import ClassVar, Sequence
+from typing import ClassVar
 
 from pydantic import AliasChoices, BaseModel, PostgresDsn, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -22,7 +22,9 @@ class JWTSettings(BaseModel):
     """JWT settings.
     """
 
-    SECRET_KEY: str = Field(default=secrets.token_urlsafe(32), min_length=32, max_length=64)
+    SECRET_KEY: str = Field(
+        default=secrets.token_urlsafe(32), min_length=32, max_length=64
+    )
     VALID_ISSUER: str | None = "kalorie-tracker-api"
     VALID_AUDIENCES: str | Sequence[str] | None = ["http://localhost:8000"]
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
