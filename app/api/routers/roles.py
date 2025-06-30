@@ -78,7 +78,7 @@ def update_role(
     role_id: UUID, 
     entry: RoleUpdate, 
     role_manager: RoleManager = Depends(Provide[DIContainer.role_manager])
-) -> Any:
+) -> None:
     """Update a role.
     """
     role = role_manager.get_by_id(role_id)
@@ -101,7 +101,7 @@ def update_role(
 def delete_role(
     role_id: UUID, 
     role_manager: RoleManager = Depends(Provide[DIContainer.role_manager])
-) -> Any:
+) -> None:
     """Remove a custom role.
     """
     role = role_manager.get_by_id(role_id)

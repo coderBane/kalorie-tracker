@@ -61,7 +61,7 @@ def update_profile(
     schema: UserProfileUpdate, 
     current_user: CurrentUser, 
     user_service: UserService = Depends(Provide(DIContainer.user_service))
-) -> Any:
+) -> None:
     """Update my user profile.
     """
     user_id = user_service.update_profile(current_user.email_address, schema)
@@ -81,7 +81,7 @@ def update_profile(
 def delete_profile(
     current_user: CurrentUser,
     user_service: UserService = Depends(Provide(DIContainer.user_service))
-) -> Any:
+) -> None:
     """Delete my user account.
     """
     result = user_service.delete_account(current_user.email_address)
@@ -102,7 +102,7 @@ def change_password(
     password_entry: UserPasswordUpdate, 
     current_user: CurrentUser, 
     user_manager: UserManager = Depends(Provide(DIContainer.user_manager))
-) -> Any:
+) -> None:
     """Change my password.
     """
     user = user_manager.get_by_email(current_user.email_address)
@@ -224,7 +224,7 @@ def update_user(
     user_id: UUID, 
     user_entry: UserEntry, 
     user_manager: UserManager = Depends(Provide(DIContainer.user_manager))
-) -> Any:
+) -> None:
     """Update a user.
     """
     user = user_manager.get_by_id(user_id)
@@ -253,7 +253,7 @@ def delete_user(
     user_id: UUID,
     current_user: CurrentUser, 
     user_manager: UserManager = Depends(Provide(DIContainer.user_manager))
-) -> Any:
+) -> None:
     """Delete a user.
     """
     user = user_manager.get_by_id(user_id)

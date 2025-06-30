@@ -59,7 +59,7 @@ def update_food_category(
     food_category_id: UUID, 
     schema: FoodCategoryUpdate, 
     food_service: FoodService = Depends(Provide[DIContainer.food_service])
-) -> Any:
+) -> None:
     """Update a food category.
     """
     result = food_service.update_food_category(food_category_id, schema)
@@ -150,7 +150,7 @@ def update_food_item(
     food_id: UUID, 
     food_entry: FoodItemEntry, 
     food_service: FoodService = Depends(Provide[DIContainer.food_service])
-) -> Any:
+) -> None:
     """Update an existing food item.
     """
     result = food_service.update_food_item(food_id, food_entry)
@@ -171,7 +171,7 @@ def update_food_item(
 def delete_food_item(
     food_id: UUID, 
     food_service: FoodService = Depends(Provide[DIContainer.food_service])
-) -> Any:
+) -> None:
     """Delete a food item.
     """
     result = food_service.delete_food_item(food_id)
