@@ -23,9 +23,10 @@ class DatabaseContext:
     """
 
     def __init__(self, connection_string: str) -> None:
+        settings = get_app_settings()
         self._engine = create_engine(
             connection_string, 
-            echo=get_app_settings().ENVIRONMENT == Environment.DEVELOPMENT
+            echo=settings.ENVIRONMENT == Environment.DEVELOPMENT
         )
 
     def apply_migrations(self) -> None:

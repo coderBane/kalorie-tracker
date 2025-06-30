@@ -1,3 +1,4 @@
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -14,7 +15,7 @@ from app.middlewares import *
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI): # type: ignore[no-untyped-def]
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     init_db()
     seed_db()
     yield
@@ -25,7 +26,8 @@ container = DIContainer()
 app = FastAPI(
     lifespan=lifespan, 
     title="Kalorie Tracker API",
-    middleware=[BearerTokenAuthenticationMiddleware]
+    middleware=[BearerTokenAuthenticationMiddleware], 
+    debug=container.app_settings().DEBUG
 )
 
 app.include_router(auth_router)

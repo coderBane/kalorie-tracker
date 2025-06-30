@@ -8,8 +8,7 @@ from app.services import *  # noqa: F403
 
 
 class DIContainer(containers.DeclarativeContainer):
-    """
-    Dependency injection container for the application.
+    """Application dependency injection container.
     """
 
     wiring_config = containers.WiringConfiguration(
@@ -28,7 +27,7 @@ class DIContainer(containers.DeclarativeContainer):
 
     app_db_context = providers.Singleton(
         DatabaseContext, 
-        connection_string=str(app_settings.provided.DB_DSN))
+        connection_string=str(app_settings.provided().database_url))
     
     ## food ##
     

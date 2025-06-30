@@ -5,7 +5,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import ClassVar
 
-from pydantic import AliasChoices, BaseModel, PostgresDsn, Field
+from pydantic import BaseModel, PostgresDsn, Field, computed_field
+from pydantic_core import MultiHostUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,9 +14,9 @@ class Environment(StrEnum):
     """Environment for different deployment stages.
     """
 
-    DEVELOPMENT = "Development"
-    STAGING = "Staging"
-    PRODUCTION = "Production"
+    DEVELOPMENT = "development"
+    STAGING = "staging"
+    PRODUCTION = "production"
 
 
 class JWTSettings(BaseModel):
@@ -43,11 +44,33 @@ class AppSettings(BaseSettings):
 
     BASE_DIR: ClassVar[Path] = Path(__file__).resolve().parent.parent
 
-    ENVIRONMENT: Environment = Field(default=Environment.DEVELOPMENT)
+    DEBUG: bool = False
+    ENVIRONMENT: Environment = Environment.PRODUCTION
+
     JWT: JWTSettings = JWTSettings()
-    DB_DSN: PostgresDsn = Field(
-        validation_alias=AliasChoices("DATABASE_URL", "DB_URL")
-    )
+
+    DB_HOST: str
+    DB_PORT: int = 5432
+    DB_USER: str
+    DB_PASSWORD: str
+    DB_NAME: str
+    DB_QUERY: str | None = None
+
+    @computed_field # type: ignore[prop-decorator]
+    @property
+    def database_url(self) -> PostgresDsn:
+        """Get the database URL.
+        """
+        url = MultiHostUrl.build(
+            scheme="postgresql+psycopg",
+            host=self.DB_HOST,
+            port=self.DB_PORT,
+            username=self.DB_USER,
+            password=self.DB_PASSWORD,
+            path=self.DB_NAME, 
+            query=self.DB_QUERY
+        )
+        return PostgresDsn(url)
 
 
 @functools.cache

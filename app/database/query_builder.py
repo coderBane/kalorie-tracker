@@ -9,7 +9,12 @@ from typing import (
 )
 
 from sqlalchemy import ColumnElement, UnaryExpression, inspect
-from sqlalchemy.orm import InstrumentedAttribute, QueryableAttribute, Mapper, selectinload
+from sqlalchemy.orm import (
+    InstrumentedAttribute, 
+    QueryableAttribute, 
+    Mapper, 
+    selectinload
+)
 from sqlalchemy.sql.selectable import FromClause
 from sqlmodel import or_, select
 from sqlmodel.sql.expression import SelectOfScalar

@@ -16,7 +16,7 @@ if config.config_file_name is not None:
 
 from app.core.settings import get_app_settings
 
-config.set_main_option("sqlalchemy.url", str(get_app_settings().DB_DSN))
+config.set_main_option("sqlalchemy.url", str(get_app_settings().database_url))
 
 # add your model's MetaData object here
 # for 'autogenerate' support
