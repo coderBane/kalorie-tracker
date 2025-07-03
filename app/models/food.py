@@ -11,7 +11,7 @@ class FoodItemCategory(SQLModel, table=True):
     """Model representing a food item category link.
     """
 
-    __tablename__ = "food_item_category" # type: ignore
+    __tablename__ = "food_item_category" # pyright: ignore[reportAssignmentType]
 
     food_item_id: UUID = Field(foreign_key="food_item.id", primary_key=True)
     food_category_id: UUID = Field(foreign_key="food_category.id", primary_key=True)
@@ -21,7 +21,7 @@ class FoodCategory(AuditableEntity, table=True):
     """Model representing a food category.
     """
 
-    __tablename__ = "food_category" # type: ignore
+    __tablename__ = "food_category" # pyright: ignore[reportAssignmentType]
 
     name: NotEmptyStr = Field(max_length=128, index=True, unique=True)
     description: str | None = None
@@ -51,7 +51,7 @@ class FoodItem(AuditableEntity, table=True):
     """Model representing a food item.
     """
 
-    __tablename__ = "food_item" # type: ignore
+    __tablename__ = "food_item" # pyright: ignore[reportAssignmentType]
 
     name: NotEmptyStr = Field(max_length=128, index=True, unique=True)
     description: NotEmptyStr
@@ -60,15 +60,19 @@ class FoodItem(AuditableEntity, table=True):
     nutrition_content: NutritionContent = Field(sa_column=Column(JSONB, nullable=False))
     image_uri: str | None = None
 
-    food_categories: list[FoodCategory] = Relationship(back_populates="food_items", link_model=FoodItemCategory)
-    recipes: list["Recipe"] = Relationship(back_populates="food_item", cascade_delete=True)
+    food_categories: list[FoodCategory] = Relationship(
+        back_populates="food_items", link_model=FoodItemCategory, passive_deletes="all"
+    )
+    recipes: list["Recipe"] = Relationship(
+        back_populates="food_item", passive_deletes="all"
+    )
 
 
 class Recipe(AuditableEntity, table=True):
     """Model representing a recipe for a food item.
     """
 
-    __tablename__ = "recipe" # type: ignore
+    __tablename__ = "recipe" # pyright: ignore[reportAssignmentType]
 
     food_item_id: UUID = Field(foreign_key="food_item.id", ondelete="CASCADE")
     name: NotEmptyStr = Field(max_length=128, index=True, unique=True)

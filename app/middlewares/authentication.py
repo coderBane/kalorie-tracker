@@ -10,11 +10,11 @@ from starlette.authentication import (
 )
 from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
+from typing_extensions import override
 
 from app.core.container import DIContainer
 from app.core.security import TokenValidator
 from app.schemas.auth import TokenPayload
-
 
 logger = logging.getLogger(__name__)
 
@@ -25,15 +25,16 @@ class BearerTokenAuthBackend(AuthenticationBackend):
 
     __exclude_paths = ["/docs", "/openapi.json", "/scalar"]
 
-    async def authenticate(self, conn):
+    @override
+    async def authenticate(self, conn):  # type: ignore[no-untyped-def]
         if conn.url.path in self.__exclude_paths:
             return
-        
+
         auth = conn.headers.get("Authorization", None)
         if auth is None:
             logger.info("Anonymous user session")
             return
-        
+
         try:
             scheme, token = auth.split(' ', 1)
             if scheme.lower() != "bearer":
@@ -50,16 +51,19 @@ class BearerTokenAuthBackend(AuthenticationBackend):
             raise AuthenticationError("Invalid authentication credentials.")
         if not user.is_active:
             raise AuthenticationError("Inactive user.")
-        
+
         user_roles = user_manager.get_roles(user)
-        
+
         conn.state.user = user
         conn.state.user_roles = user_roles
 
         scopes = ["authenticated"]
         scopes.extend(user_roles)
-        
+
         return AuthCredentials(scopes), SimpleUser(user.username)
 
 
-BearerTokenAuthenticationMiddleware = Middleware(AuthenticationMiddleware, backend=BearerTokenAuthBackend())
+BearerTokenAuthenticationMiddleware = Middleware(
+    AuthenticationMiddleware,
+    backend=BearerTokenAuthBackend()
+)

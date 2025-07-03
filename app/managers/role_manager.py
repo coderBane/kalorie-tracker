@@ -1,7 +1,7 @@
-from typing import Sequence
+from collections.abc import Sequence
 from uuid import UUID
 
-from app.repositories.role_repository import RoleRepository
+from app.repositories import RoleRepository
 from app.models.auth import Role
 from app.schemas.common.result import Error
 
@@ -10,7 +10,7 @@ class RoleManager:
     """Manages role-related operations
     """
 
-    def __init__(self, role_repository: RoleRepository):
+    def __init__(self, role_repository: RoleRepository) -> None:
         self.__role_repository = role_repository
 
     @property
@@ -21,16 +21,19 @@ class RoleManager:
         """Create a new role.
         """
         if self.role_exists(role.name):
-            return Error.conflict("AuthError.RoleExists", f"Role (Name: {role.name}) already exists")
+            return Error.conflict(
+                "AuthError.RoleExists", 
+                f"Role (Name: {role.name}) already exists"
+            )
 
         return self.__role_repository.add(role)
     
-    def update(self, role: Role):
+    def update(self, role: Role) -> None:
         """Update a role.
         """
         self.__role_repository.update(role)
 
-    def delete(self, role: Role):
+    def delete(self, role: Role) -> None:
         """Delete a role.
         """
         self.__role_repository.delete(role)

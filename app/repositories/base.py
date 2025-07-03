@@ -1,14 +1,13 @@
 from abc import ABC
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from contextlib import AbstractContextManager
-from uuid import UUID
 from typing import (
     Any,
     Generic, 
-    Sequence,  
     TypeVar,
     overload,
 )
+from uuid import UUID
 
 from sqlalchemy import ColumnElement
 from sqlalchemy.orm import QueryableAttribute, selectinload
@@ -31,7 +30,7 @@ class BaseRepository(ABC, Generic[TEntity]):
         self, 
         entity: type[TEntity], 
         db_session_factory: Callable[..., AbstractContextManager[Session]]
-    ):
+    ) -> None:
         self._entity = entity
         self._db_session_factory = db_session_factory
 
@@ -90,7 +89,7 @@ class BaseRepository(ABC, Generic[TEntity]):
                     session.delete(entity)
             self._save_changes(session)
 
-    def _save_changes(self, session: Session, *entities: TEntity):
+    def _save_changes(self, session: Session, *entities: TEntity) -> None:
         """Persist changes to the database.
         """
         session.commit()
@@ -106,7 +105,19 @@ class BaseRepository(ABC, Generic[TEntity]):
     @overload
     def any(self, *, query: QueryBuilder[TEntity]) -> bool: ...
     
-    def any(self, *filters: ColumnElement[bool], query: QueryBuilder[TEntity] | None = None) -> bool:
+    def any(
+        self, 
+        *filters: ColumnElement[bool], 
+        query: QueryBuilder[TEntity] | None = None
+    ) -> bool:
+        """Check if any row in the database match the given criteria.
+
+        Parameters:
+            *filters (ColumnElement[bool]): 
+                Optional SQLAlchemy filter expressions to apply to the query.
+            query (QueryBuilder[TEntity]): 
+                Optional query builder to customize the query.        
+        """
         with self._db_session_factory() as session:
             stmt = select(1).select_from(self._entity)
             if query is not None:
@@ -121,8 +132,18 @@ class BaseRepository(ABC, Generic[TEntity]):
     @overload
     def count(self, *, query: QueryBuilder[TEntity]) -> int: ...
     
-    def count(self, *filters: ColumnElement[bool], query: QueryBuilder[TEntity] | None = None) -> int:
+    def count(
+        self, 
+        *filters: ColumnElement[bool], 
+        query: QueryBuilder[TEntity] | None = None
+    ) -> int:
         """Count the number of rows in the database matching all given criteria.
+
+         Parameters:
+            *filters (ColumnElement[bool]): 
+                Optional SQLAlchemy filter expressions to apply to the query.
+            query (QueryBuilder[TEntity]): 
+                Optional query builder to customize the query.
         """
         with self._db_session_factory() as session:
             stmt = select(func.count()).select_from(self._entity)
@@ -149,6 +170,14 @@ class BaseRepository(ABC, Generic[TEntity]):
         query: QueryBuilder[TEntity] | None = None,
     ) -> TEntity | None:
         """Find an entity matching the given criteria.
+
+        Parameters:
+            *filters (ColumnElement[bool]): 
+                Optional SQLAlchemy filter expressions to apply to the query.
+            includes (Sequence[QueryableAttribute[Any]]): 
+                Optional list of related entities to eagerly load.
+            query (QueryBuilder[TEntity]): 
+                Optional query builder to customize the query.
         """
         with self._db_session_factory() as session:
             statement = select(self._entity)
@@ -164,6 +193,9 @@ class BaseRepository(ABC, Generic[TEntity]):
 
     def get_by_id(self, id: UUID) -> TEntity | None:
         """Get an entity by its Identifier.
+
+        Parameters:
+            id (UUID): The unique identifier of the entity.
         """
         with self._db_session_factory() as session:
             return session.get(self._entity, id)
@@ -171,7 +203,11 @@ class BaseRepository(ABC, Generic[TEntity]):
     @overload 
     def get_list(self, *, query: QueryBuilder[TEntity]) -> Sequence[TEntity]: ...
     @overload
-    def get_list(self, *filters: ColumnElement[bool], **options: Any) -> Sequence[TEntity]: ...
+    def get_list(
+        self, 
+        *filters: ColumnElement[bool], 
+        **options: Any
+    ) -> Sequence[TEntity]: ...
 
     def get_list(
             self, 
@@ -183,8 +219,10 @@ class BaseRepository(ABC, Generic[TEntity]):
         Retrieve a list of entities matching the specified filters and options.
 
         Parameters:
-            query (QueryBuilder[TEntity]): Optional query builder to customize the query.        
-            *filters (ColumnElement[bool]): Optional SQLAlchemy filter expressions to apply to the query.
+            *filters (ColumnElement[bool]): 
+                Optional SQLAlchemy filter expressions to apply to the query.
+            query (QueryBuilder[TEntity]): 
+                Optional query builder to customize the query.        
             **options (Any): Optional keyword arguments to modify the query behavior:
                 - includes (Sequence[QueryableAttribute[Any]]): Eager load related entities.
                 - ordering (Any): SQLAlchemy ordering expression to sort the results.
@@ -214,7 +252,12 @@ class BaseRepository(ABC, Generic[TEntity]):
     
     _T0 = TypeVar('_T0')
 
-    def _exclude_deleted_entities(self, statement: SelectOfScalar[_T0]) -> SelectOfScalar[_T0]:
+    def _exclude_deleted_entities(
+        self, 
+        statement: SelectOfScalar[_T0]
+    ) -> SelectOfScalar[_T0]:
+        """Exclude soft-deleted entities from the query.
+        """
         if issubclass(self._entity, SoftDeleteEntity):
-            statement = statement.where(self._entity.is_deleted == False)
+            statement = statement.where(not self._entity.is_deleted)
         return statement

@@ -23,19 +23,29 @@ class AuthService:
             password (str): The password of the user.
         
         Returns:
-            (Error | str): The access_token if authentication is successful, error otherwise.
+            (Error | str): 
+                The access_token if authentication is successful, error otherwise.
         """
         user = self.__user_manager.get_by_email(username) or \
             self.__user_manager.get_by_name(username)
         
         if not user:
-            return Error.invalid("AuthError.InvalidCredentials", "Invalid authentication request.")
+            return Error.invalid(
+                "AuthError.InvalidCredentials", 
+                "Invalid authentication request."
+            )
         
         if not user.is_active:
-            return Error.invalid("AuthError.UserNotActive", "Invalid authentication request.")
+            return Error.invalid(
+                "AuthError.UserNotActive", 
+                "Invalid authentication request."
+            )
         
         if not self.__user_manager.check_password(user, password):
-            return Error.invalid("AuthError.InvalidCredentials", "Invalid authentication request.")
+            return Error.invalid(
+                "AuthError.InvalidCredentials", 
+                "Invalid authentication request."
+            )
         
         token_claims = self.__get_token_claims(user)
         token = self.__token_provider.generate_access_token(token_claims)

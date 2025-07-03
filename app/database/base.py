@@ -1,8 +1,8 @@
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Iterator
 
 from sqlalchemy import Engine
-from sqlalchemy_utils import create_database, database_exists
+from sqlalchemy_utils import create_database, database_exists # type: ignore[import-untyped]
 from sqlmodel import Session, create_engine
 
 from app.core.settings import Environment, get_app_settings
@@ -23,9 +23,10 @@ class DatabaseContext:
     """
 
     def __init__(self, connection_string: str) -> None:
+        settings = get_app_settings()
         self._engine = create_engine(
             connection_string, 
-            echo=get_app_settings().ENVIRONMENT == Environment.DEVELOPMENT
+            echo=settings.ENVIRONMENT == Environment.DEVELOPMENT
         )
 
     def apply_migrations(self) -> None:
@@ -51,7 +52,10 @@ class DatabaseContext:
         directory = ScriptDirectory.from_config(alembic_cfg)
         with self._engine.begin() as conn:
             context = MigrationContext.configure(conn)
-            has_pending_migrations = set(context.get_current_heads()) != set(directory.get_heads())
+            has_pending_migrations = (
+                set(context.get_current_heads()) != 
+                set(directory.get_heads())
+            )
 
         if has_pending_migrations:
             # Apply all migrations up to 'head' (latest)

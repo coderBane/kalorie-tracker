@@ -1,13 +1,14 @@
-import uuid
 from abc import ABC
-from typing import Any
 from datetime import datetime
+from typing import Any
+import uuid
 
-from sqlmodel import DateTime, SQLModel, Field
+from sqlmodel import SQLModel, DateTime, Field
 
 
 class Entity(SQLModel, ABC):
-    """Base model for all database entities in the application."""
+    """Base model for all database entities in the application.
+    """
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
 
     def is_transient(self) -> bool:
@@ -21,7 +22,8 @@ class Entity(SQLModel, ABC):
 
 
 class AuditableEntity(Entity, ABC):
-    """Base model for all database entities that require auditing."""
+    """Base model for all database entities that require auditing.
+    """
     created_utc: datetime | None = Field(
         default=None, nullable=False, sa_type=DateTime(timezone=True) # type: ignore
     )
@@ -31,6 +33,7 @@ class AuditableEntity(Entity, ABC):
 
 
 class SoftDeleteEntity(Entity, ABC):
-    """Base model for all database entities that require soft deletion."""
+    """Base model for all database entities that require soft deletion.
+    """
     is_deleted: bool = False
     deleted_utc: datetime | None = Field(default=None, sa_type=DateTime(timezone=True)) # type: ignore

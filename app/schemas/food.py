@@ -1,4 +1,5 @@
 from enum import StrEnum
+from typing import Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
@@ -49,7 +50,7 @@ class FoodItemsFilter(PaginationFilter):
     max_calories: float | None = Field(default=None, gt=0.0)
 
     @model_validator(mode="after")
-    def check_calorie_range(self):
+    def check_calorie_range(self) -> Self:
         if self.min_calories is not None and self.max_calories is not None:
             if self.min_calories > self.max_calories:
                 raise ValueError("`min_calories` must be less than `max_calories`")

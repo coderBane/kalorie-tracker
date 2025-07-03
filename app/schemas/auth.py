@@ -9,7 +9,7 @@ class TokenPayload(BaseModel):
 
     @field_validator("sub", mode="before")
     @classmethod
-    def validate_sub(cls, value) -> Any:
+    def validate_sub(cls, value: Any) -> Any:
         if isinstance(value, str):
             return UUID(value)
         return value

@@ -1,11 +1,10 @@
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from contextlib import AbstractContextManager
-from typing import Sequence
 from uuid import UUID
-from typing_extensions import override
 
 from sqlmodel import Session, col, select
+from typing_extensions import override
 
 from app.models.auth import Role, User, UserRole
 from app.models.user import AppUser
@@ -46,7 +45,7 @@ class UserRepository(BaseRepository[User], UserRoleRepository):
     def __init__(
         self, 
         db_session_factory: Callable[..., AbstractContextManager[Session]]
-    ):
+    ) -> None:
         super().__init__(User, db_session_factory)
 
     def find_by_email(self, email: str) -> User | None:

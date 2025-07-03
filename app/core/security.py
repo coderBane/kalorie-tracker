@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import jwt
@@ -26,12 +26,13 @@ class TokenProvider:
 
         payload = request.copy()
 
-        expire = datetime.now(timezone.utc) + \
+        now = datetime.now(UTC)
+        expire = now + \
             timedelta(minutes=app_settings.JWT.ACCESS_TOKEN_EXPIRE_MINUTES)
         
         payload.update({
             "exp": expire,
-            "iat": datetime.now(timezone.utc),
+            "iat": now,
         })
 
         if app_settings.JWT.VALID_ISSUER:
@@ -59,7 +60,8 @@ class TokenValidator:
             token (str): The JWT token to decode.
 
         Returns:
-            (dict[str, Any] | None): The decoded payload if the token is valid, otherwise None.
+            (dict[str, Any] | None): 
+                The decoded payload if the token is valid, otherwise None.
         """
         app_settings = get_app_settings()
         
@@ -67,10 +69,10 @@ class TokenValidator:
             token, 
             app_settings.JWT.SECRET_KEY,
             issuer=app_settings.JWT.VALID_ISSUER,
-            audience="http://localhost:8000", # TODO: do not harcode
+            audience="http://localhost:8000", # TODO: do not hardcode
             algorithms=[TokenProvider.ALGORITHM]
         )
-        return payload
+        return payload # type: ignore[no-any-return]
 
 
 class PasswordHasher:

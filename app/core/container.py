@@ -2,14 +2,13 @@ from dependency_injector import containers, providers
 
 from app.core.settings import get_app_settings
 from app.database import DatabaseContext
-from app.managers import *
-from app.repositories import *
-from app.services import *
+from app.managers import *  # noqa: F403
+from app.repositories import *  # noqa: F403
+from app.services import *  # noqa: F403
 
 
 class DIContainer(containers.DeclarativeContainer):
-    """
-    Dependency injection container for the application.
+    """Application dependency injection container.
     """
 
     wiring_config = containers.WiringConfiguration(
@@ -28,7 +27,7 @@ class DIContainer(containers.DeclarativeContainer):
 
     app_db_context = providers.Singleton(
         DatabaseContext, 
-        connection_string=str(app_settings.provided.DB_DSN))
+        connection_string=str(app_settings.provided().database_url))
     
     ## food ##
     

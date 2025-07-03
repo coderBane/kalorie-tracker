@@ -16,7 +16,7 @@ auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @auth_router.post(
     "/access-token", 
-    operation_id="GenerateToken", 
+    operation_id="GetAccessToken", 
     response_model=TokenResponse
 )
 @inject
@@ -43,7 +43,7 @@ def get_access_token(
 
 @auth_router.get(
     "/me", 
-    operation_id="UserSession", 
+    operation_id="CurrentUserSession", 
     response_model=UserSessionInfo,
     dependencies=[Depends(Authorize())]
 )

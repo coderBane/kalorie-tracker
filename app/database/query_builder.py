@@ -4,13 +4,18 @@ from typing import (
     Generic,
     NamedTuple,
     Self, 
-    Type, 
     TypeVar,
     final
 )
 
 from sqlalchemy import ColumnElement, UnaryExpression, inspect
-from sqlalchemy.orm import InstrumentedAttribute, QueryableAttribute, Mapper, selectinload
+from sqlalchemy.orm import (
+    InstrumentedAttribute, 
+    QueryableAttribute, 
+    Mapper, 
+    selectinload
+)
+from sqlalchemy.sql.selectable import FromClause
 from sqlmodel import or_, select
 from sqlmodel.sql.expression import SelectOfScalar
 
@@ -47,7 +52,7 @@ class QueryBuilder(ABC, Generic[T]):
         model (Type[T]): The model class associated with this query builder.
     """
 
-    def __init__(self, model: Type[T]) -> None:
+    def __init__(self, model: type[T]) -> None:
         """
         Initializes a new instance of a QueryBuilder.
 
@@ -63,7 +68,7 @@ class QueryBuilder(ABC, Generic[T]):
         self.__with_deleted: bool = False
 
     @property
-    def model(self) -> Type[T]:
+    def model(self) -> type[T]:
         """Get the underlying model type.
         """
         return self.__model
@@ -128,7 +133,11 @@ class QueryBuilder(ABC, Generic[T]):
 
         return self
     
-    def __resolve_relationship(self, base_model: Type[Any], target_model: Type[Any]):
+    def __resolve_relationship(
+        self, 
+        base_model: type[Any], 
+        target_model: type[Any]
+    ) -> tuple[Any, FromClause | None] | None:
         mapper = inspect(base_model) # type: Mapper[Any]
         for rel in mapper.relationships:
             related_model_type = rel.mapper.class_
@@ -161,13 +170,19 @@ class QueryBuilder(ABC, Generic[T]):
             self.__with_deleted = True
         return self
     
-    def build(self, statement: SelectOfScalar[Any] | None = None, criteriaOnly: bool = False) -> SelectOfScalar[Any]:
+    def build(
+        self, 
+        statement: SelectOfScalar[Any] | None = None, 
+        criteriaOnly: bool = False
+    ) -> SelectOfScalar[Any]:
         """
         Build and return the final SQLAlchemy Select statement.
 
         Parameters:
-            statement (SelectOfScalar[Any] | None): An optional base statement to build upon.
-            criteriaOnly (bool): If True, only apply filters without eager loading or ordering.
+            statement (SelectOfScalar[Any] | None): 
+                An optional base statement to build upon.
+            criteriaOnly (bool): 
+                If True, only apply filters without eager loading or ordering.
 
         Returns:
             SelectOfScalar[Any]: The final SQLAlchemy Select statement.
@@ -181,7 +196,7 @@ class QueryBuilder(ABC, Generic[T]):
         statement = statement.where(*self.__filters)
 
         if not self.__with_deleted and issubclass(self.__model, SoftDeleteEntity):
-            statement = statement.where(self.__model.is_deleted == False)
+            statement = statement.where(not self.__model.is_deleted)
 
         if not criteriaOnly:
             statement = statement.options(*self.__includes)
@@ -194,13 +209,18 @@ class QueryBuilder(ABC, Generic[T]):
 
         return statement
     
-    def __call__(self, statement: SelectOfScalar[Any], criteriaOnly: bool = False) -> SelectOfScalar[Any]:
+    def __call__(
+        self, 
+        statement: SelectOfScalar[Any], 
+        criteriaOnly: bool = False
+    ) -> SelectOfScalar[Any]:
         """
         Callable interface to build the query with the provided statement and options.
 
         Parameters:
             statement (SelectOfScalar[Any]): The base statement to build upon.
-            criteriaOnly (bool): If True, only apply filters without eager loading or ordering.
+            criteriaOnly (bool): 
+                If True, only apply filters without eager loading or ordering.
 
         Returns:
             SelectOfScalar[Any]: The final SQLAlchemy Select statement.

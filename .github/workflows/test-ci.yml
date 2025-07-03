@@ -32,5 +32,6 @@ jobs:
       run: |
         poetry env use ${{ steps.python.outputs.python-version }}
         poetry install --no-interaction
+    
     - name: Run tests
       run: poetry run pytest tests/ --verbose

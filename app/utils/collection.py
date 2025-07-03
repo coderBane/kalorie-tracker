@@ -6,7 +6,6 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Generic, TypeVar, final
 
-
 _T = TypeVar('_T')
 
 
@@ -18,9 +17,10 @@ class ComparisonResult(Generic[_T]):
     Attributes:
         added (Iterable[_T]): Items that were added in the new collection.
         removed (Iterable[_T]): Items that were removed from the old collection.
-        unchanged (Iterable[_T]): Items that remain unchanged between the two collections.
+        unchanged (Iterable[_T]):
+            Items that remain unchanged between the two collections.
     """
-    
+
     added: Iterable[_T]
     removed: Iterable[_T]
     unchanged: Iterable[_T]
@@ -29,9 +29,11 @@ class ComparisonResult(Generic[_T]):
         """Check if there are any changes between the collections.
         """
         return bool(self.added or self.removed)
-    
 
-def compare_collections(current: Iterable[_T], previous: Iterable[_T]) -> ComparisonResult[_T]:
+
+def compare_collections(
+    current: Iterable[_T], previous: Iterable[_T]
+) -> ComparisonResult[_T]:
     """
     Compare two collections and return the differences.
 

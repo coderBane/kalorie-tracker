@@ -4,8 +4,8 @@ from factory.faker import Faker
 from app.models.food import NutritionContent
 
 
-class NutritionContentFactory(Factory):
-    class Meta: # type: ignore
+class NutritionContentFactory(Factory): # type: ignore[type-arg]
+    class Meta: # pyright: ignore
         model = NutritionContent
     
     carb_g = Faker('pyfloat', min_value=0, max_value=500)

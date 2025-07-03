@@ -1,7 +1,8 @@
-from typing import Annotated, Sequence
+from collections.abc import Sequence
+from typing import Annotated
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import Depends, HTTPException, Request, status, Security
+from fastapi import HTTPException, Request, status, Depends, Security
 from fastapi.security.oauth2 import OAuth2PasswordBearer
 
 from app.core.container import DIContainer
@@ -9,25 +10,27 @@ from app.managers import UserManager
 from app.schemas.auth import UserSessionInfo
 
 
-oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/access-token", auto_error=False)
+oauth2_bearer = OAuth2PasswordBearer(
+    tokenUrl="auth/access-token", auto_error=False
+)
 
 
 class Authorize:
     """A class for authorizing users.
     """
 
-    def __init__(self, roles: Sequence[str] | None = None):
+    def __init__(self, roles: Sequence[str] | None = None) -> None:
         self.__roles = set(roles) if roles else None
 
-    def __call__(self, request: Request, _: str = Security(oauth2_bearer)):
+    def __call__(self, request: Request, _: str = Security(oauth2_bearer)) -> None:
         # Authentication check
         if not request.user.is_authenticated:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, 
+                status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Not authenticated.",
                 headers={"WWW-Authenticate": "Bearer"}
             )
-        
+
         # Authorize check
         if self.__roles:
             user_roles = set(getattr(request.state, "user_roles", []))
@@ -40,14 +43,14 @@ class Authorize:
 
 @inject
 def get_current_user(
-    request: Request, 
+    request: Request,
     user_manager: UserManager = Depends(Provide[DIContainer.user_manager])
 ) -> UserSessionInfo | None:
     """Get the current user
     """
     if not request.user.is_authenticated:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, 
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated.",
             headers={"WWW-Authenticate": "Bearer"}
         )
@@ -58,10 +61,10 @@ def get_current_user(
 
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, 
+                status_code=status.HTTP_404_NOT_FOUND,
                 detail="User does not exist"
             )
-    
+
     sessionInfo = UserSessionInfo.model_validate(user, from_attributes=True)
 
     if request.client:
