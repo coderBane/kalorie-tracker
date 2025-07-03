@@ -35,6 +35,10 @@ Temporary Items
 # iCloud generated files
 *.icloud
 
+### Docker ###
+# Ignore Dockerfile and docker-compose files
+docker-compose.debug.yml
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/

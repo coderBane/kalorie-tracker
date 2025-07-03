@@ -1,0 +1,41 @@
+services:
+  api:
+    environment:
+      - DB_HOST=db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=kalorietrackerdb
+    ports:
+      - 8000:8000
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 3
+    develop:
+      watch:
+        - path: .
+          action: rebuild
+
+  db:
+    restart: on-failure
+    user: postgres
+    environment:
+      - POSTGRES_DB=kalorietrackerdb
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - 55679:5432
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 20s
+      timeout: 15s
+      retries: 3
+
+volumes:
+  db-data:
+    name: kalorietracker-db-data

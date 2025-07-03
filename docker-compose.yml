@@ -1,0 +1,22 @@
+name: kalorietracker
+
+services:
+  api:
+    container_name: kalorietracker-api
+    image: ${DOCKER_REGISTRY-}kalorietracker:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: dev
+    depends_on:
+      - db
+
+  db:
+    container_name: kalorietracker-db
+    image: postgres:17-alpine
+    ports:
+      - 5432:5432
+
+networks:
+  default:
+    name: kt-net
